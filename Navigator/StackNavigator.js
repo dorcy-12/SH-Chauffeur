@@ -15,4 +15,5 @@ function StackNavigator() {
   );
 }
 
+
 export default StackNavigator;
