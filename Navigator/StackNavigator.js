@@ -10,7 +10,7 @@ function StackNavigator() {
     <Stack.Navigator>
       <Stack.Screen name="login" component={LoginScreen} options={{headerShown: false}}/>
 
-      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name="Home" component={HomeScreen} options={{headerShown: false}}/>
     </Stack.Navigator>
   );
 }
