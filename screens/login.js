@@ -10,7 +10,7 @@ function LoginScreen({ navigation }) {
 
   const handleLogin = () => {
     // Replace with your authentication logic
-      navigation.navigate('Home');
+      navigation.navigate('Main');
   };
 
   return (

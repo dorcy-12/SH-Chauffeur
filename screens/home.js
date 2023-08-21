@@ -1,8 +1,12 @@
 import React from "react";
 import { StyleSheet, Text, View, Image, Button, Platform, SafeAreaView, StatusBar } from "react-native";
 import Card from "../Components/Card";
+import { useTheme } from "../context/ThemeContext";
+import Footer from "../Components/footer";
+function HomeScreen({navigation}) {
+  const theme = useTheme()
+  const styles = createStyles(theme);
 
-function HomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -10,7 +14,9 @@ function HomeScreen() {
         <Text style={styles.title}>Dienstplan</Text>
       </View>
 
+
       {/* Content */}
+      
       <View style={styles.content}>
         <Card
           number="SH 302"
@@ -20,21 +26,18 @@ function HomeScreen() {
         />
         {/* Add more cards as needed */}
       </View>
-
-      {/* Footer */}
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>Footer Information</Text>
-      </View>
+    
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#F7F8F9",
     paddingTop: Platform.OS == "android" ? StatusBar.currentHeight: 0
   },
+
   image: {
     width: "100%",
     height: "100%",
@@ -44,6 +47,7 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
     justifyContent: "center",
+    marginTop:20
     // Add any other styling
   },
   title: {
@@ -55,15 +59,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     // Add any other styling
-  },
-  footer: {
-    width: "100%",
-    alignItems: "center",
-    justifyContent: "center",
-    // Add any other styling
-  },
-  footerText: {
-    fontSize: 18,
   },
 });
 export default HomeScreen;
