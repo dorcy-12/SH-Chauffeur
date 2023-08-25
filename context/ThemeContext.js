@@ -3,7 +3,7 @@ import React, { createContext, useContext } from 'react';
 // Define the theme colors
 const themeColors = {
   primary: '#1290CB',
-  primaryText: '#fff',
+  primaryText: '#ffffff',
   secondary: '#3495A5',
   tertiary: '#F7F8F9',
   text:'#000'

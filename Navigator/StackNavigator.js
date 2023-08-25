@@ -2,6 +2,7 @@ import React from "react";
 import { createStackNavigator, createBottomTabNavigator } from "@react-navigation/stack";
 import LoginScreen from "../screens/login";
 import MainTabs from "./MainTabs";
+import MapScreen from "../screens/MapScreen";
 const Stack = createStackNavigator();
 
 function StackNavigator() {
@@ -17,6 +18,13 @@ function StackNavigator() {
         component={MainTabs}
         options={{ headerShown: false }}
       />
+      <Stack.Screen
+        name="Map"
+        component={MapScreen}
+        options={{ headerShown: false }}
+      />
+      
+      
     </Stack.Navigator>
   );
 }
