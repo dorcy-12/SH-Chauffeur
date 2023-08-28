@@ -3,6 +3,7 @@ import { createStackNavigator, createBottomTabNavigator } from "@react-navigatio
 import LoginScreen from "../screens/login";
 import MainTabs from "./MainTabs";
 import MapScreen from "../screens/MapScreen";
+import DrivingTimerScreen from "../screens/DrivingTimerScreen";
 const Stack = createStackNavigator();
 
 function StackNavigator() {
@@ -21,6 +22,11 @@ function StackNavigator() {
       <Stack.Screen
         name="Map"
         component={MapScreen}
+        options={{ headerShown: false }}
+      />
+       <Stack.Screen
+        name="Timer"
+        component={DrivingTimerScreen}
         options={{ headerShown: false }}
       />
       

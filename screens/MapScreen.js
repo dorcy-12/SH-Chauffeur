@@ -44,10 +44,9 @@ function MapScreen({ navigation, route }) {
       });
 
       if (address && address.length > 0) {
-        console.log(address)
+        console.log(address);
         console.log("Street Name:", address[0].street);
-        setCurrentInput(address[0].street + "," + address[0].streetNumber)
-
+        setCurrentInput(address[0].street + "," + address[0].streetNumber);
       }
     })();
 
@@ -105,7 +104,7 @@ function MapScreen({ navigation, route }) {
             <TouchableOpacity
               style={styles.button}
               onPress={() => {
-                // Handle the drive action here
+                navigation.navigate("Timer");
                 setModalVisible(false);
               }}
             >

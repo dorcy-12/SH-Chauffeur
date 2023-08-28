@@ -20,15 +20,15 @@ const TripCard = ({ trip }) => {
             <Ionicons name="time" size={16} color={theme.secondary} />
             <Text style={styles.detail}>Start: {trip.startTime}</Text>
           </View>
-          <Text style={styles.detail}>End: {trip.endTime}</Text>
+          <Text style={styles.detail}>Ende: {trip.endTime}</Text>
         </View>
         <View style={styles.detailRow}>
           <Ionicons name="calendar" size={16} color={theme.secondary} />
-          <Text style={styles.detail}>Date: {trip.date}</Text>
+          <Text style={styles.detail}>Datum: {trip.date}</Text>
         </View>
         <View style={styles.detailRow}>
           <Ionicons name="speedometer" size={16} color={theme.secondary} />
-          <Text style={styles.detail}>Kilometers: {trip.kilometers}</Text>
+          <Text style={styles.detail}>Strecke: {trip.kilometers}</Text>
         </View>
       </View>
     </View>
