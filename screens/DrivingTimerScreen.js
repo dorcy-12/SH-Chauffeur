@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from "react-native";
 import BackgroundTimer from "react-native-background-timer";
 import PushNotification from "react-native-push-notification";
 
@@ -14,14 +14,32 @@ function DrivingTimerScreen() {
     let interval;
     if (isActive) {
       interval = BackgroundTimer.setInterval(() => {
-        setElapsedSeconds((prevSeconds) => prevSeconds + 1);
-        updateNotification(formatTime(prevSeconds + 1));
+        setElapsedSeconds((prevSeconds) => {
+          const newSeconds = prevSeconds + 1;
+          updateNotification(formatTime(newSeconds));
+          return newSeconds;
+        });
       }, 1000);
     } else {
       BackgroundTimer.clearInterval(interval);
     }
     return () => BackgroundTimer.clearInterval(interval);
   }, [isActive]);
+
+  useEffect(() => {
+    PushNotification.createChannel(
+      {
+        channelId: "timer-channel", // (required)
+        channelName: "Timer Channel", // (required)
+        channelDescription: "A channel for timer notifications", // (optional) default: undefined.
+        playSound: false, // (optional) default: true
+        soundName: "default", // (optional) See `soundName` parameter of `localNotification` function
+        importance: 4, // (optional) default: 4. Int value of the Android notification importance
+        vibrate: true, // (optional) default: true. Creates the default vibration pattern if true.
+      },
+      (created) => console.log(`createChannel returned '${created}'`) // (optional) callback returns whether the channel was created, false means it already existed.
+    );
+  }, []);
 
   const formatTime = (seconds) => {
     const hours = Math.floor(seconds / 3600);
@@ -36,7 +54,8 @@ function DrivingTimerScreen() {
 
   const updateNotification = (formattedTime) => {
     PushNotification.localNotification({
-      id: "timerNotification",
+      channelId: "timer-channel",
+      id: 1,
       message: `Timer: ${formattedTime}`,
       // Other notification options...
     });
@@ -44,18 +63,22 @@ function DrivingTimerScreen() {
 
   const startTimer = () => {
     setIsActive(true);
+    console.log('we started')
     PushNotification.localNotification({
-      id: "timerNotification",
-      message: "Timer started",
+      channelId: "timer-channel",
+      id: 1,
+      message: `Timer started`,
       // Other notification options...
     });
+    console.log('we reached here')
   };
 
   const pauseTimer = () => {
     setIsActive(false);
     PushNotification.localNotification({
-      id: "timerNotification",
-      message: "Timer paused",
+      channelId: "timer-channel",
+      id: 1,
+      message: `Timer paused`,
       // Other notification options...
     });
   };
@@ -63,101 +86,70 @@ function DrivingTimerScreen() {
   const stopTimer = () => {
     setIsActive(false);
     setElapsedSeconds(0);
-    PushNotification.cancelLocalNotifications({ id: "timerNotification" });
+    PushNotification.cancelLocalNotification({ id: 1 });
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.timerCircle}>
+      <View style={styles.timerWrapper}>
         <Text style={styles.timerText}>{formatTime(elapsedSeconds)}</Text>
       </View>
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => (isActive ? pauseTimer() : startTimer())}
-        >
-          <Text style={styles.buttonText}>{isActive ? "Pause" : "Start"}</Text>
+      <View style={styles.infoContainer}>
+        <Text style={styles.infoText}>Start: {startLocation}</Text>
+        <Text style={styles.infoText}>End: {endLocation}</Text>
+        <Text style={styles.infoText}>Distance: {distance} km</Text>
+      </View>
+      <View style={styles.buttonWrapper}>
+        <TouchableOpacity style={styles.button} onPress={() => (isActive ? pauseTimer() : startTimer())}>
+          <Text style={styles.buttonText}>{isActive ? 'Pause' : 'Start'}</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton} onPress={stopTimer}>
+        <TouchableOpacity style={[styles.button, {backgroundColor:"red"}]} onPress={stopTimer}>
           <Text style={styles.buttonText}>Stop</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => {
-            /* Finish logic here */
-          }}
-        >
-          <Text style={styles.buttonText}>Finish</Text>
-        </TouchableOpacity>
-      </View>
-      <View style={styles.detailsContainer}>
-        <Text>
-          <Text style={styles.detailLabel}>Distance:</Text> {distance} km
-        </Text>
-        <Text>
-          <Text style={styles.detailLabel}>Start:</Text> {startLocation}
-        </Text>
-        <Text>
-          <Text style={styles.detailLabel}>End:</Text> {endLocation}
-        </Text>
       </View>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#e0e0e0",
-    padding: 20,
+    backgroundColor: '#F2F2F2',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  timerCircle: {
-    backgroundColor: "#424242",
-    borderRadius: 150,
-    width: 300,
-    height: 300,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 20,
-    elevation: 5,
+  timerWrapper: {
+    marginBottom: 40,
   },
   timerText: {
-    color: "white",
-    fontSize: 28,
+    fontSize: 72,
+    color: '#333333',
   },
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
+  infoContainer: {
     marginBottom: 20,
   },
-  actionButton: {
-    backgroundColor: "#2196F3",
+  infoText: {
+    fontSize: 18,
+    color: '#333333',
+    marginBottom: 10,
+  },
+  buttonWrapper: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    paddingHorizontal: 40,
+  },
+  button: {
+    backgroundColor: '#333333',
     borderRadius: 25,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    margin: 5,
-    elevation: 3,
-    flex: 1,
-
-    alignItems: "center",
+    width: 100,
+    height: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   buttonText: {
-    color: "white",
-    fontSize: 16,
-  },
-  detailsContainer: {
-    backgroundColor: "white",
-    borderRadius: 15,
-    width: "100%",
-    alignItems: "center",
-    padding: 15,
-    elevation: 5,
-  },
-  detailLabel: {
-    fontWeight: "bold",
+    color: '#FFFFFF',
+    fontSize: 18,
   },
 });
 
