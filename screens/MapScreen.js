@@ -8,10 +8,12 @@ import {
   Modal,
   TextInput,
   TouchableOpacity,
+  PermissionsAndroid,
 } from "react-native";
 import { useTheme } from "../context/ThemeContext";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
+import { Ionicons, AntDesign } from "@expo/vector-icons";
 
 function MapScreen({ navigation, route }) {
   const [location, setLocation] = useState(null);
@@ -56,6 +58,10 @@ function MapScreen({ navigation, route }) {
     }, 1000);
   }, []);
 
+  const toggleModalVisibility = () => {
+    setModalVisible(true);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       {location ? (
@@ -64,8 +70,8 @@ function MapScreen({ navigation, route }) {
           initialRegion={{
             latitude: location.coords.latitude,
             longitude: location.coords.longitude,
-            latitudeDelta: 0.0922,
-            longitudeDelta: 0.0421,
+            latitudeDelta: 0.009,
+            longitudeDelta: 0.009,
           }}
         >
           <Marker
@@ -79,6 +85,15 @@ function MapScreen({ navigation, route }) {
       ) : (
         <Text>{errorMsg ? errorMsg : "Fetching location..."}</Text>
       )}
+
+      {/* Button to Toggle Modal */}
+      <TouchableOpacity
+        style={styles.toggleModalButton}
+        onPress={toggleModalVisibility}
+      >
+        <AntDesign name="car" size={24} color="#FFFFFF" />
+      </TouchableOpacity>
+
       <Modal
         animationType="slide"
         transparent={true}
@@ -185,6 +200,32 @@ const createStyles = (theme) =>
       shadowOpacity: 0.23,
       shadowRadius: 2.62,
       // Android shadow property
+      elevation: 4,
+    },
+    buttonText: {
+      color: theme.primaryText,
+      fontSize: 16,
+      fontWeight: "bold",
+    },
+    toggleModalButton: {
+      position: "absolute", // Here's the trick
+      bottom: 20, // Position from the bottom
+      right: 20, // Position from the right
+      width: 100,
+      height: 50,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: theme.primary, // Change to your preferred color
+      borderRadius: 25,
+      // Add shadow for iOS
+      shadowColor: "#000",
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.23,
+      shadowRadius: 2.62,
+      // Add elevation for Android
       elevation: 4,
     },
     buttonText: {
