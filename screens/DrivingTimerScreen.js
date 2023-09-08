@@ -59,6 +59,7 @@ function DrivingTimerScreen() {
       
       // Other notification options...
     });
+    console.log(formattedTime)
   };
 
   const startTimer = () => {
