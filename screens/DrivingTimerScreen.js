@@ -32,10 +32,7 @@ function DrivingTimerScreen() {
         channelId: "timer-channel", // (required)
         channelName: "Timer Channel", // (required)
         channelDescription: "A channel for timer notifications", // (optional) default: undefined.
-        playSound: false, // (optional) default: true
-        soundName: "default", // (optional) See `soundName` parameter of `localNotification` function
-        importance: 4, // (optional) default: 4. Int value of the Android notification importance
-        vibrate: true, // (optional) default: true. Creates the default vibration pattern if true.
+        
       },
       (created) => console.log(`createChannel returned '${created}'`) // (optional) callback returns whether the channel was created, false means it already existed.
     );
@@ -57,6 +54,9 @@ function DrivingTimerScreen() {
       channelId: "timer-channel",
       id: 1,
       message: `Timer: ${formattedTime}`,
+      playSound: false, // (optional) default: true
+      vibrate: false, // (optional) default: true. Creates the default vibration pattern if true.
+      
       // Other notification options...
     });
   };
@@ -68,6 +68,9 @@ function DrivingTimerScreen() {
       channelId: "timer-channel",
       id: 1,
       message: `Timer started`,
+      playSound: false, // (optional) default: true
+      vibrate: false, // (optional) default: true. Creates the default vibration pattern if true.
+      
       // Other notification options...
     });
     console.log('we reached here')
@@ -79,6 +82,9 @@ function DrivingTimerScreen() {
       channelId: "timer-channel",
       id: 1,
       message: `Timer paused`,
+      playSound: true, // (optional) default: true
+      vibrate: true, // (optional) default: true. Creates the default vibration pattern if true.
+      
       // Other notification options...
     });
   };
