@@ -1,24 +1,44 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from "react-native";
+import React, { useCallback, useState, useEffect } from "react";
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import BackgroundTimer from "react-native-background-timer";
 import PushNotification from "react-native-push-notification";
 
-function DrivingTimerScreen() {
+function DrivingTimerScreen({navigation}) {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isActive, setIsActive] = useState(false);
   const [distance, setDistance] = useState(0);
   const [startLocation, setStartLocation] = useState("Unknown");
   const [endLocation, setEndLocation] = useState("Unknown");
 
+  const preventNavigationIfTimerIsActive = useCallback(
+    (e) => {
+      if (isActive) {
+        e.preventDefault();
+
+        // Optionally show an alert to inform the user
+        Alert.alert(
+          'Timer is running',
+          'You cannot navigate away while the timer is active.',
+          [{ text: 'OK' }]
+        );
+      }
+    },
+    [isActive]
+  );
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', preventNavigationIfTimerIsActive);
+
+    return unsubscribe;
+  }, [navigation, preventNavigationIfTimerIsActive]);
+
   useEffect(() => {
     let interval;
     if (isActive) {
+      // Call the notification function only once when the timer starts
+      updateNotification();
       interval = BackgroundTimer.setInterval(() => {
-        setElapsedSeconds((prevSeconds) => {
-          const newSeconds = prevSeconds + 1;
-          updateNotification(formatTime(newSeconds));
-          return newSeconds;
-        });
+        setElapsedSeconds(prevSeconds => prevSeconds + 1);
       }, 1000);
     } else {
       BackgroundTimer.clearInterval(interval);
@@ -32,6 +52,10 @@ function DrivingTimerScreen() {
         channelId: "timer-channel", // (required)
         channelName: "Timer Channel", // (required)
         channelDescription: "A channel for timer notifications", // (optional) default: undefined.
+        vibrate:false,
+        sound:true,
+        onlyAlertOnce: true,
+        
         
       },
       (created) => console.log(`createChannel returned '${created}'`) // (optional) callback returns whether the channel was created, false means it already existed.
@@ -49,31 +73,22 @@ function DrivingTimerScreen() {
     )}:${String(remainingSeconds).padStart(2, "0")}`;
   };
 
-  const updateNotification = (formattedTime) => {
+  const updateNotification = () => {
     PushNotification.localNotification({
       channelId: "timer-channel",
       id: 1,
-      message: `Timer: ${formattedTime}`,
-      playSound: false, // (optional) default: true
-      vibrate: false, // (optional) default: true. Creates the default vibration pattern if true.
-      
+      message: `Timer läuft`,
+      playSound: true,
+      soundName: 'default',
+      ongoing: true,
       // Other notification options...
     });
-    console.log(formattedTime)
+
   };
 
   const startTimer = () => {
     setIsActive(true);
     console.log('we started')
-    PushNotification.localNotification({
-      channelId: "timer-channel",
-      id: 1,
-      message: `Timer started`,
-      playSound: false, // (optional) default: true
-      vibrate: false, // (optional) default: true. Creates the default vibration pattern if true.
-      
-      // Other notification options...
-    });
     console.log('we reached here')
   };
 
@@ -83,8 +98,8 @@ function DrivingTimerScreen() {
       channelId: "timer-channel",
       id: 1,
       message: `Timer paused`,
-      playSound: true, // (optional) default: true
-      vibrate: true, // (optional) default: true. Creates the default vibration pattern if true.
+      playSound: true,
+      soundName: "default"
       
       // Other notification options...
     });
