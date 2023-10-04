@@ -1,16 +1,29 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, SafeAreaView } from 'react-native';
 import { Feather } from "@expo/vector-icons"
+import { loginUser } from '../service/authservice';
 
 function LoginScreen({ navigation }) {
-  const [username, setUsername] = useState('');
+  const [Id, setId] = useState('');
   const [password, setPassword] = useState('');
   const [isPinVisible, setIsPinVisible] = useState(false);
 
 
-  const handleLogin = () => {
-    // Replace with your authentication logic
+
+  const handleLogin = async () => {
+    try {
+      const data = await loginUser(Id, password);
+      // Handle the received token or data as needed.
+      // For example, store the token in AsyncStorage and navigate to the main app screen.
+
+      await AsyncStorage.setItem('userToken', data.token);
+      // Navigate to main screen or dashboard
       navigation.navigate('Main');
+  } catch (error) {
+      // Handle login error, e.g., show an error message to the user.
+      console.error('Login failed:', error);
+  }
+      
   };
 
   return (
@@ -20,8 +33,8 @@ function LoginScreen({ navigation }) {
         <View style = {styles.inputContainer}>
           <TextInput
           placeholder="Fahrer-Nr"
-          value={username}
-          onChangeText={setUsername}
+          value={Id}
+          onChangeText={setId}
           style={styles.input}
         />
         </View>
