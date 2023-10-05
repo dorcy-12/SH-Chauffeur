@@ -1,29 +1,37 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, SafeAreaView } from 'react-native';
-import { Feather } from "@expo/vector-icons"
-import { loginUser } from '../service/authservice';
+import React, { useState, useContext } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Image,
+  StyleSheet,
+  SafeAreaView,
+} from "react-native";
+import { Feather } from "@expo/vector-icons";
+import { loginUser, logoutUser } from "../service/authservice";
+import * as SecureStore from "expo-secure-store";
+import { AuthContext } from "../context/UserAuth";
 
 function LoginScreen({ navigation }) {
-  const [Id, setId] = useState('');
-  const [password, setPassword] = useState('');
+  const [Id, setId] = useState("");
+  const [pin, setPin] = useState("");
   const [isPinVisible, setIsPinVisible] = useState(false);
-
-
-
+  const { setIsUserLoggedIn } = useContext(AuthContext);
   const handleLogin = async () => {
     try {
-      const data = await loginUser(Id, password);
+      const data = await loginUser(Id, pin);
       // Handle the received token or data as needed.
       // For example, store the token in AsyncStorage and navigate to the main app screen.
 
-      await AsyncStorage.setItem('userToken', data.token);
+      await SecureStore.setItemAsync("userToken", data);
+
       // Navigate to main screen or dashboard
-      navigation.navigate('Main');
-  } catch (error) {
+      setIsUserLoggedIn(true);
+    } catch (error) {
       // Handle login error, e.g., show an error message to the user.
-      console.error('Login failed:', error);
-  }
-      
+      console.error("Login failed:", error);
+    }
   };
 
   return (
@@ -32,11 +40,11 @@ function LoginScreen({ navigation }) {
       <View style={styles.form}>
         <View style={styles.inputContainer}>
           <TextInput
-          placeholder="Fahrer-Nr"
-          value={Id}
-          onChangeText={setId}
-          style={styles.input}
-        />
+            placeholder="Fahrer-Nr"
+            value={Id}
+            onChangeText={setId}
+            style={styles.input}
+          />
         </View>
 
         <View style={styles.inputContainer}>

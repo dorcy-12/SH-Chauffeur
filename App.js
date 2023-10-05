@@ -1,11 +1,14 @@
+import React, { useState, useEffect, createContext } from "react";
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
-import StackNavigator from "./Navigator/StackNavigator";
+import RootNavigator from "./Navigator/RootNavigator";
 import { ThemeProvider } from "./context/ThemeContext";
 import PushNotification from "react-native-push-notification";
 import PushNotificationIOS from "@react-native-community/push-notification-ios";
-
+import { getToken } from "./service/authservice";
+import { AuthContext } from "./context/UserAuth";
+/*
 PushNotification.configure({
   
   onRegister: function (token) {
@@ -44,15 +47,28 @@ PushNotification.configure({
   requestPermissions: Platform.OS === 'ios'
 
 });
-
+*/
 
 export default function App() {
+  const [isUserLoggedIn, setIsUserLoggedIn] = useState(null);
+
+  useEffect(() => {
+    const checkToken = async () => {
+      const token = await getToken();
+      setIsUserLoggedIn(!!token); // Ensure it's a boolean
+    };
+
+    checkToken();
+  }, []);
+
   return (
-    <ThemeProvider>
-      <NavigationContainer>
-        <StackNavigator />
-      </NavigationContainer>
-    </ThemeProvider>
+    <AuthContext.Provider value={{ isUserLoggedIn, setIsUserLoggedIn }}>
+      <ThemeProvider>
+        <NavigationContainer>
+          <RootNavigator />
+        </NavigationContainer>
+      </ThemeProvider>
+    </AuthContext.Provider>
   );
 }
 

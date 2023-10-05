@@ -10,11 +10,6 @@ function StackNavigator() {
   return (
     <Stack.Navigator >
       <Stack.Screen
-        name="login"
-        component={LoginScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
         name="Main"
         component={MainTabs}
         options={{ headerShown: false }}

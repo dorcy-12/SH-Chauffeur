@@ -1,11 +1,22 @@
-import React from 'react';
+import React, {useContext} from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import Footer from '../Components/footer';
+import { logoutUser, getToken } from '../service/authservice';
+import { AuthContext } from '../context/UserAuth';
 const ProfileScreen = ({ navigation }) => {
     const theme = useTheme();
     const styles = createStyles(theme);
-  
+    const { setIsUserLoggedIn } = useContext(AuthContext);
+
+    const handleLogout = async () => {
+      console.log('in');
+      await logoutUser();
+      setIsUserLoggedIn(false);
+    };
+    
+
+
     return (
       <View style={styles.container}>
         <View style={styles.content}>
@@ -15,9 +26,7 @@ const ProfileScreen = ({ navigation }) => {
           />
           <Text style={styles.profileName}>John Doe</Text>
           <Text style={styles.profileEmail}>john.doe@example.com</Text>
-          <TouchableOpacity style={styles.logoutButton} onPress={() => {
-            // Add logout functionality here
-          }}>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Text style={styles.logoutText}>Log Out</Text>
           </TouchableOpacity>
         </View>
