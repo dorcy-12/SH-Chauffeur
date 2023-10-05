@@ -20,14 +20,9 @@ function LoginScreen({ navigation }) {
   const { setIsUserLoggedIn } = useContext(AuthContext);
   const handleLogin = async () => {
     try {
-      const data = await loginUser(Id, pin);
-      // Handle the received token or data as needed.
-      // For example, store the token in AsyncStorage and navigate to the main app screen.
-
-      await SecureStore.setItemAsync("userToken", data);
-
-      // Navigate to main screen or dashboard
+      await loginUser(Id, pin);
       setIsUserLoggedIn(true);
+      
     } catch (error) {
       // Handle login error, e.g., show an error message to the user.
       console.error("Login failed:", error);
