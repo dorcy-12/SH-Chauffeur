@@ -9,7 +9,10 @@ export async function loginUser(employee_id, password) {
             employee_id: employee_id,
             password: password
         });
-        return response.data.token;  // This should contain the token if successful
+        const token = response.data.token;
+
+        // Store the token in SecureStore
+        await SecureStore.setItemAsync("userToken", token); // This should contain the token if successful
     } catch (error) {
         console.error("There was an error logging in", error);
         throw error;
@@ -18,12 +21,26 @@ export async function loginUser(employee_id, password) {
 
 export async function logoutUser() {
     try {
-        console.log('inside logout')
+        console.log('inside logout');
+
+        // Fetch the token
+        const token = await getToken();
+
+        // Make a POST request to logout endpoint
+        await axios.post(`${BASE_URL}/api/logout/`, {}, {
+            headers: {
+                'Authorization': `Token ${token}`
+            }
+        });
+
+        // Delete the token from SecureStore
         await SecureStore.deleteItemAsync('userToken');
+        
     } catch (error) {
         console.error("Error during logout:", error);
     }
 }
+
 
 export async function getToken() {
     try {
