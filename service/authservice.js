@@ -41,6 +41,21 @@ export async function logoutUser() {
     }
 }
 
+export async function fetchTrips() {
+    const token = await getToken();
+    try {
+        const response = await axios.get(`${BASE_URL}/api/get_trips/`, {
+            headers: {
+                'Authorization': `Token ${token}`
+            }
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Failed to fetch trips:", error);
+        throw error;
+    }
+}
+
 
 export async function getToken() {
     try {
@@ -49,3 +64,4 @@ export async function getToken() {
         console.error("Error fetching token:", error);
     }
 }
+

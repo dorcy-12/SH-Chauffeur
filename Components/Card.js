@@ -40,6 +40,7 @@ const createStyles = (theme) => StyleSheet.create({
   cardContainer: {
     flexDirection: "column",
     width: "90%",
+
     borderRadius: 10,
     backgroundColor: theme.tertiary,
     shadowColor: "#000",
@@ -49,6 +50,7 @@ const createStyles = (theme) => StyleSheet.create({
     elevation: 3,
     marginBottom: 20,
     overflow: "hidden",
+    alignSelf:"center"
   },
   cardHeader: {
     flexDirection: "row",
