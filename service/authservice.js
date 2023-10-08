@@ -1,7 +1,7 @@
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
-const BASE_URL = 'http://192.168.0.105:8000';
+const BASE_URL = 'http://192.168.178.90:8000';
 
 export async function loginUser(employee_id, password) {
     try {
@@ -27,12 +27,13 @@ export async function logoutUser() {
         const token = await getToken();
 
         // Make a POST request to logout endpoint
+        /*
         await axios.post(`${BASE_URL}/api/logout/`, {}, {
             headers: {
                 'Authorization': `Token ${token}`
             }
         });
-
+        */
         // Delete the token from SecureStore
         await SecureStore.deleteItemAsync('userToken');
         

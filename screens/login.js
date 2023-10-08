@@ -20,7 +20,7 @@ function LoginScreen({ navigation }) {
   const { setIsUserLoggedIn } = useContext(AuthContext);
   const handleLogin = async () => {
     try {
-      await loginUser(Id, pin);
+      //await loginUser(Id, pin);
       setIsUserLoggedIn(true);
       
     } catch (error) {

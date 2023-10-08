@@ -11,6 +11,7 @@ const Stack = createStackNavigator();
 function RootNavigator() {
   const { isUserLoggedIn } = useContext(AuthContext);
 
+
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {isUserLoggedIn ? (

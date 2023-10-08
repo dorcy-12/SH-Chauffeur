@@ -12,11 +12,10 @@ const ProfileScreen = ({ navigation }) => {
     const handleLogout = async () => {
       console.log('in');
       await logoutUser();
-      setIsUserLoggedIn(false);
+      console.log(await getToken());
+      await setIsUserLoggedIn(false);
     };
     
-
-
     return (
       <View style={styles.container}>
         <View style={styles.content}>

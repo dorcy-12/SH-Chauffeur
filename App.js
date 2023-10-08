@@ -55,6 +55,7 @@ export default function App() {
   useEffect(() => {
     const checkToken = async () => {
       const token = await getToken();
+      console.log(token)
       setIsUserLoggedIn(!!token); // Ensure it's a boolean
     };
 
