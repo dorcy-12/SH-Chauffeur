@@ -14,13 +14,28 @@ import {
 import Card from "../Components/Card";
 import { useTheme } from "../context/ThemeContext";
 import { fetchTrips } from "../service/authservice";
-
+const mockTrips = [
+  {
+    id: 1,
+    vehicle: { vehicle_number: "1234" },
+    end_location: "Davenportplatz",
+    start_time: new Date().toISOString(),
+  },
+  {
+    id: 2,
+    vehicle: { vehicle_number: "5678" },
+    end_location: "Frankfurt",
+    start_time: new Date().toISOString(),
+  },
+  // ... Add more mock trips as needed
+];
 function HomeScreen({ navigation }) {
   const theme = useTheme();
   const styles = createStyles(theme);
   const [trips, setTrips] = useState([]);
 
   const [refreshing, setRefreshing] = useState(false); // Add this line
+
 
   useEffect(() => {
     loadTrips();
@@ -29,7 +44,7 @@ function HomeScreen({ navigation }) {
   const loadTrips = async () => {
     setRefreshing(true);
     try {
-      const fetchedTrips = await fetchTrips();
+      const fetchedTrips = mockTrips
       setTrips(fetchedTrips);
     } catch (error) {
       console.error("Error loading trips:", error);

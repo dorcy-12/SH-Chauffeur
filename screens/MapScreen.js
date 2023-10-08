@@ -17,6 +17,7 @@ import { Ionicons, AntDesign } from "@expo/vector-icons";
 
 function MapScreen({ navigation, route }) {
   const [location, setLocation] = useState(null);
+  const [destinationCoords, setDestinationCoords] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [currentInput, setCurrentInput] = useState("");
@@ -25,9 +26,6 @@ function MapScreen({ navigation, route }) {
   const styles = createStyles(theme);
 
   useEffect(() => {
-    if (route.params?.location) {
-      setDestinationInput(route.params.location);
-    }
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
@@ -45,10 +43,23 @@ function MapScreen({ navigation, route }) {
         longitude: currentLocation.coords.longitude,
       });
 
+    
       if (address && address.length > 0) {
         console.log(address);
         console.log("Street Name:", address[0].street);
         setCurrentInput(address[0].street + "," + address[0].streetNumber);
+      }
+
+      if (route.params?.location) {
+        setDestinationInput(route.params.location);
+        try {
+          let coords = await Location.geocodeAsync(route.params.location);
+          if (coords && coords.length > 0) {
+            setDestinationCoords(coords[0]);
+          }
+        } catch (error) {
+          console.error("Error geocoding destination address:", error);
+        }
       }
     })();
 
@@ -60,6 +71,18 @@ function MapScreen({ navigation, route }) {
 
   const toggleModalVisibility = () => {
     setModalVisible(true);
+  };
+
+  const confirmDestination = async () => {
+    try {
+      // Geocode the destination address to get its latitude and longitude
+      let coords = await Location.geocodeAsync(destinationInput);
+      if (coords && coords.length > 0) {
+        setDestinationCoords(coords[0]);
+      }
+    } catch (error) {
+      console.error("Error geocoding destination address:", error);
+    }
   };
 
   return (
@@ -81,6 +104,9 @@ function MapScreen({ navigation, route }) {
             }}
             title="My Location"
           />
+          {destinationCoords && (
+            <Marker coordinate={destinationCoords} title="Destination" />
+          )}
         </MapView>
       ) : (
         <Text>{errorMsg ? errorMsg : "Fetching location..."}</Text>

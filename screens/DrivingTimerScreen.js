@@ -9,6 +9,8 @@ function DrivingTimerScreen({navigation}) {
   const [distance, setDistance] = useState(0);
   const [startLocation, setStartLocation] = useState("Unknown");
   const [endLocation, setEndLocation] = useState("Unknown");
+  const [userPath, setUserPath] = useState([]); // To store the user's path
+  const [locationIntervalId, setLocationIntervalId] = useState(null); // Reference to the location update interval
 
   const preventNavigationIfTimerIsActive = useCallback(
     (e) => {
@@ -46,6 +48,7 @@ function DrivingTimerScreen({navigation}) {
     return () => BackgroundTimer.clearInterval(interval);
   }, [isActive]);
 
+  
   useEffect(() => {
     PushNotification.createChannel(
       {
@@ -61,7 +64,7 @@ function DrivingTimerScreen({navigation}) {
       (created) => console.log(`createChannel returned '${created}'`) // (optional) callback returns whether the channel was created, false means it already existed.
     );
   }, []);
-
+  
   const formatTime = (seconds) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -72,7 +75,7 @@ function DrivingTimerScreen({navigation}) {
       "0"
     )}:${String(remainingSeconds).padStart(2, "0")}`;
   };
-
+  
   const updateNotification = () => {
     PushNotification.localNotification({
       channelId: "timer-channel",
@@ -85,9 +88,57 @@ function DrivingTimerScreen({navigation}) {
     });
 
   };
+  const haversine_distance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371; // Radius of the Earth in kilometers
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a = 
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * 
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c;
+    return distance;
+  };
+  
+  const decide_ping_frequency = (distance) => {
+    if (distance < 5) return 30; // 30 seconds
+    if (distance >= 5 && distance <= 20) return 120; // 2 minutes
+    return 300; // 5 minutes
+  };
+  
+  
+  const fetchCurrentLocation = async () => {
+    let currentLocation = await Location.getCurrentPositionAsync({});
+    return currentLocation;
+  };
+
+  const startLocationUpdates = async () => {
+    const currentLocation = await fetchCurrentLocation();
+    setStartLocation(`${currentLocation.coords.latitude}, ${currentLocation.coords.longitude}`);
+    setUserPath(prevPath => [...prevPath, currentLocation.coords]);
+
+    const distanceToDestination = haversine_distance(currentLocation.coords.latitude, currentLocation.coords.longitude, endLocation.latitude, endLocation.longitude); // Assuming endLocation is in this format: {latitude: xx, longitude: yy}
+    const pingFrequency = decide_ping_frequency(distanceToDestination);
+
+    const intervalId = BackgroundTimer.setInterval(async () => {
+      const location = await fetchCurrentLocation();
+      setUserPath(prevPath => [...prevPath, location.coords]);
+    }, pingFrequency * 1000);
+
+    setLocationIntervalId(intervalId);
+  };
+
+  const stopLocationUpdates = () => {
+    if (locationIntervalId) {
+      BackgroundTimer.clearInterval(locationIntervalId);
+      setLocationIntervalId(null);
+    }
+  };
 
   const startTimer = () => {
     setIsActive(true);
+    startLocationUpdates();
     console.log('we started')
     console.log('we reached here')
   };
@@ -108,6 +159,7 @@ function DrivingTimerScreen({navigation}) {
   const stopTimer = () => {
     setIsActive(false);
     setElapsedSeconds(0);
+    stopLocationUpdates();
     PushNotification.cancelLocalNotification({ id: 1 });
   };
 
