@@ -4,6 +4,8 @@ import LoginScreen from "../screens/login";
 import MainTabs from "./MainTabs";
 import MapScreen from "../screens/MapScreen";
 import DrivingTimerScreen from "../screens/DrivingTimerScreen";
+import JourneyDetailsScreen from "../screens/JourneyDetails";
+
 const Stack = createStackNavigator();
 
 function StackNavigator() {
@@ -19,9 +21,14 @@ function StackNavigator() {
         component={MapScreen}
         options={{ headerShown: false }}
       />
-       <Stack.Screen
+      <Stack.Screen
         name="Timer"
         component={DrivingTimerScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Journey"
+        component={JourneyDetailsScreen}
         options={{ headerShown: false }}
       />
       
