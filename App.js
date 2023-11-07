@@ -8,6 +8,8 @@ import PushNotification from "react-native-push-notification";
 import PushNotificationIOS from "@react-native-community/push-notification-ios";
 import { getToken } from "./service/authservice";
 import { AuthContext } from "./context/UserAuth";
+import { TripProvider } from "./context/TripContext";
+
 /*
 PushNotification.configure({
   
@@ -55,7 +57,7 @@ export default function App() {
   useEffect(() => {
     const checkToken = async () => {
       const token = await getToken();
-      console.log(token)
+      console.log(token);
       setIsUserLoggedIn(!!token); // Ensure it's a boolean
     };
 
@@ -66,18 +68,12 @@ export default function App() {
     <AuthContext.Provider value={{ isUserLoggedIn, setIsUserLoggedIn }}>
       <ThemeProvider>
         <NavigationContainer>
-          <RootNavigator />
+          <TripProvider>
+            <RootNavigator />
+          </TripProvider>
         </NavigationContainer>
       </ThemeProvider>
     </AuthContext.Provider>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});

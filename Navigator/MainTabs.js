@@ -8,7 +8,6 @@ const Tab = createBottomTabNavigator();
 function MainTabs() {
   return (
     <Tab.Navigator
-      initialRouteName="home"
       tabBar={(props) => <Footer {...props} />}
     >
       <Tab.Screen name="home" component={HomeScreen} options={{headerShown:false}}/>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   StyleSheet,
   Text,
@@ -14,11 +14,10 @@ import {
 import Card from "../Components/Card";
 import { useTheme } from "../context/ThemeContext";
 import { fetchTrips } from "../service/authservice";
-import * as SecureStore from 'expo-secure-store';
-
+import * as SecureStore from "expo-secure-store";
+import { useTrip } from "../context/TripContext";
 
 const mockTrips = [
-
   {
     id: 1,
     vehicle: { vehicle_number: "1234" },
@@ -27,12 +26,11 @@ const mockTrips = [
     start_time: new Date().toISOString(),
     driven_time: 0,
     distance: 0,
-    stopped:"",
+    stopped: "",
     userPath: null,
-    is_completed: false
+    is_completed: false,
   },
   {
-
     id: 2,
     vehicle: { vehicle_number: "5678" },
     start_location: "",
@@ -40,9 +38,9 @@ const mockTrips = [
     start_time: new Date().toISOString(),
     driven_time: 0,
     distance: 0,
-    stopped:"",
+    stopped: "",
     userPath: null,
-    is_completed:false
+    is_completed: false,
   },
   // ... Add more mock trips as needed
 ];
@@ -50,22 +48,39 @@ function HomeScreen({ navigation }) {
   const theme = useTheme();
   const styles = createStyles(theme);
   const [trips, setTrips] = useState([]);
-
+  const { activeTrip, setActiveTrip, allTrips, setAllTrips } = useTrip();
   const [refreshing, setRefreshing] = useState(false); // Add this line
+  const activeTrips = useMemo(
+    () => allTrips.filter((trip) => !trip.is_completed),
+    [allTrips]
+  );
 
   useEffect(() => {
-    loadTrips();
+    const fetchInitialTrips = async () => {
+      if (allTrips.length === 0) {
+        // Only fetch if not already loaded
+        try {
+          const fetchedTripsData = await SecureStore.getItemAsync("trips");
+          if (fetchedTripsData) {
+            const fetchedTrips = JSON.parse(fetchedTripsData);
+            setAllTrips(fetchedTrips); // Set in the context
+          } else {
+            console.log("No trips found in SecureStore.");
+          }
+        } catch (error) {
+          console.error("Error fetching initial trips:", error);
+        }
+      }
+    };
+
+    fetchInitialTrips();
   }, []);
-  
 
   const loadTrips = async () => {
     setRefreshing(true);
     try {
-      await SecureStore.setItemAsync('trips', JSON.stringify(mockTrips));
-      console.log("updated the trips successfully");
-      const fetchedTripsData = await SecureStore.getItemAsync("trips");
-      const fetchedTrips = fetchedTripsData ? JSON.parse(fetchedTripsData) : [];
-      setTrips(fetchedTrips);
+      await SecureStore.setItemAsync("trips", JSON.stringify(mockTrips));
+      setAllTrips(mockTrips);
     } catch (error) {
       console.error("Error loading trips:", error);
     }
@@ -81,18 +96,19 @@ function HomeScreen({ navigation }) {
       {/* Content */}
 
       <FlatList
-        data={trips.filter(trip => !trip.is_completed)}
+        data={activeTrips}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <TouchableOpacity
-            onPress={() =>
-              navigation.navigate("Map", {tripId:item.id})
-            }
+            onPress={() => {
+              setActiveTrip(item);
+              navigation.navigate("Map");
+            }}
           >
             <Card
               number={item.is_completed ? "true" : "false"}
               location={item.end_location}
-              time={new Date(item.start_time).toLocaleTimeString().slice(0,5)}
+              time={new Date(item.start_time).toLocaleTimeString().slice(0, 5)}
               date={new Date(item.start_time).toLocaleDateString()}
             />
           </TouchableOpacity>

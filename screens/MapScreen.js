@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
   StyleSheet,
   View,
@@ -8,12 +8,12 @@ import {
   Modal,
   TextInput,
   TouchableOpacity,
-  PermissionsAndroid,
 } from "react-native";
 import { useTheme } from "../context/ThemeContext";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import { Ionicons, AntDesign } from "@expo/vector-icons";
+import { useTrip } from "../context/TripContext";
 
 function MapScreen({ navigation, route }) {
   const [location, setLocation] = useState(null);
@@ -22,73 +22,93 @@ function MapScreen({ navigation, route }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [currentInput, setCurrentInput] = useState("");
   const [destinationInput, setDestinationInput] = useState("");
+  const mapRef = useRef(null);
   const theme = useTheme();
   const styles = createStyles(theme);
+  const {activeTrip, setActiveTrip }= useTrip();
 
   useEffect(() => {
-    (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        setErrorMsg("Permission to access location was denied");
-        return;
-      }
-
-      let currentLocation = await Location.getCurrentPositionAsync({});
-      console.log(currentLocation);
-      setLocation(currentLocation);
-
-      // Reverse geocoding to get the street name
-      let address = await Location.reverseGeocodeAsync({
-        latitude: currentLocation.coords.latitude,
-        longitude: currentLocation.coords.longitude,
-      });
-
-    
-      if (address && address.length > 0) {
-        console.log(address);
-        console.log("Street Name:", address[0].street);
-        setCurrentInput(address[0].street + "," + address[0].streetNumber);
-      }
-
-      if (route.params?.location) {
-        setDestinationInput(route.params.location);
-        try {
-          let coords = await Location.geocodeAsync(route.params.location);
-          if (coords && coords.length > 0) {
-            setDestinationCoords(coords[0]);
-          }
-        } catch (error) {
-          console.error("Error geocoding destination address:", error);
-        }
-      }
-    })();
-
-    // Set modal visibility after 1 second regardless of location fetch status
-    setTimeout(() => {
+    loadInitialData();
+    const timerId = setTimeout(() => {
       setModalVisible(true);
     }, 1000);
+
+    return () => clearTimeout(timerId);
   }, []);
 
-  const toggleModalVisibility = () => {
-    setModalVisible(true);
+  const loadInitialData = async () => {
+    const currentLocation = await getCurrentLocation();
+    const streetAddress = await reverseGeocodeLocation(currentLocation);
+    setCurrentInput(streetAddress);
+    if (currentLocation && streetAddress) {
+      updateActiveTrip(currentLocation, streetAddress);
+    }
   };
 
-  const confirmDestination = async () => {
-    try {
-      // Geocode the destination address to get its latitude and longitude
-      let coords = await Location.geocodeAsync(destinationInput);
-      if (coords && coords.length > 0) {
-        setDestinationCoords(coords[0]);
-      }
-    } catch (error) {
-      console.error("Error geocoding destination address:", error);
+  const getCurrentLocation = useCallback(async () => {
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== "granted") {
+      setErrorMsg("Permission to access location was denied");
+      return null;
     }
+    console.log(1);
+
+    let currentLocation = await Location.getCurrentPositionAsync({});
+    setLocation(currentLocation);
+    return currentLocation;
+  }, []);
+
+  const reverseGeocodeLocation = useCallback(async (location) => {
+    if (!location) return "";
+
+    console.log(2);
+    let address = await Location.reverseGeocodeAsync({
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+    });
+
+    if (address && address.length > 0) {
+      return address[0].street + "," + address[0].streetNumber;
+    }
+    return "";
+  }, []);
+
+  const updateActiveTrip = async (currentLocation, streetAddress) => {
+    console.log(3);
+    if (!activeTrip) return;
+    
+    // Update the destination input
+    setDestinationInput(activeTrip.end_location);
+    
+    const coords = await Location.geocodeAsync(activeTrip.end_location);
+    if (coords && coords.length > 0) {
+      setDestinationCoords(coords[0]);
+    }
+
+    // Update the active trip's start location and set the updated trip in context
+    const updatedTrip = {
+      ...activeTrip,
+      start_location: streetAddress
+    };
+    setActiveTrip(updatedTrip);
+    
+    if (mapRef.current) {
+      mapRef.current.fitToCoordinates([currentLocation.coords, coords[0]], {
+        edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
+        animated: true,
+      });
+    }
+  };
+  const toggleModalVisibility = () => {
+    console.log(4);
+    setModalVisible(true);
   };
 
   return (
     <SafeAreaView style={styles.container}>
       {location ? (
         <MapView
+          ref={mapRef}
           style={styles.map}
           initialRegion={{
             latitude: location.coords.latitude,
