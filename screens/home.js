@@ -55,6 +55,7 @@ function HomeScreen({ navigation }) {
     [allTrips]
   );
 
+  
   useEffect(() => {
     const fetchInitialTrips = async () => {
       if (allTrips.length === 0) {

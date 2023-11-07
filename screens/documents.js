@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { View, Text, ScrollView, StyleSheet, StatusBar } from "react-native";
 import { useTheme } from "../context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
@@ -10,31 +10,19 @@ import { useTrip } from "../context/TripContext";
 const DocumentsScreen = () => {
   const theme = useTheme();
   const styles = createStyles(theme);
-
   const {trips, setTrips, allTrips,setAllTrips} = useTrip();
-
-
-  useEffect(() => {
-    const fetchCompletedTrips = async () => {
-      try {
-        const storedTripsString = await SecureStore.getItemAsync("trips");
-        const allTrips = storedTripsString ? JSON.parse(storedTripsString) : [];
-        const completedTrips = allTrips.filter((trip) => trip.is_completed);
-        setTrips(completedTrips);
-      } catch (error) {
-        console.error("Error fetching trips:", error);
-      }
-    };
-
-    fetchCompletedTrips();
-  }, []);
+  const finishedTrips = useMemo(
+  () => allTrips.filter((trip) => trip.is_completed),
+  [allTrips]
+  );
+   
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Fahrten</Text>
       </View>
       <View style={styles.content}>
-        {trips.map((trip, index) => (
+        {finishedTrips.map((trip, index) => (
           <TripCard
             key={index}
             trip={{

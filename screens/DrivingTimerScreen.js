@@ -6,9 +6,6 @@ import * as SecureStore from "expo-secure-store";
 import * as Location from "expo-location";
 import { useTrip } from "../context/TripContext";
 
-
-
-
 const formatTime = (seconds) => {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
@@ -42,7 +39,7 @@ function DrivingTimerScreen({ navigation, route }) {
   const [endLocation, setEndLocation] = useState("Unknown");
   const [userPath, setUserPath] = useState([]); // To store the user's path
   const [locationIntervalId, setLocationIntervalId] = useState(null); // Reference to the location update interval
-  const {activeTrip, setActiveTrip} = useTrip();
+  const { activeTrip, setActiveTrip } = useTrip();
 
   const preventNavigationIfTimerIsActive = useCallback(
     (e) => {
@@ -102,9 +99,6 @@ function DrivingTimerScreen({ navigation, route }) {
     );
   }, []);
 
-  
-
-  
   const haversine_distance = (lat1, lon1, lat2, lon2) => {
     const R = 6371; // Radius of the Earth in kilometers
     const dLat = (lat2 - lat1) * (Math.PI / 180);
@@ -189,7 +183,7 @@ function DrivingTimerScreen({ navigation, route }) {
 
       // Other notification options...
     });
-  },[])
+  }, []);
 
   const stopTimer = useCallback(async () => {
     setIsActive(false);
@@ -213,7 +207,6 @@ function DrivingTimerScreen({ navigation, route }) {
       setEndLocation("Unknown");
     }
 
-  
     PushNotification.cancelLocalNotification({ id: 1 });
 
     navigation.navigate("Journey");
