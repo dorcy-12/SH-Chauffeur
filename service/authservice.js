@@ -1,68 +1,75 @@
-import axios from 'axios';
-import * as SecureStore from 'expo-secure-store';
+import axios from "axios";
+import * as SecureStore from "expo-secure-store";
+import { parseString } from "react-native-xml2js";
 
-const BASE_URL = 'http://192.168.178.90:8000';
+// Update with your Odoo server details
+const BASE_URL = "http://217.160.15.116";
+const DB_NAME = "default_sx3p1odoo";
 
-export async function loginUser(employee_id, password) {
-    try {
-        const response = await axios.post(`${BASE_URL}/api/custom-login/`, {
-            employee_id: employee_id,
-            password: password
-        });
-        const token = response.data.token;
+export async function loginUser(username, password) {
+  const url = `${BASE_URL}/xmlrpc/2/common`;
+  const xml = `<?xml version="1.0"?>
+  <methodCall>
+      <methodName>login</methodName>
+      <params>
+          <param>
+              <value><string>${DB_NAME}</string></value>
+          </param>
+          <param>
+              <value><string>${username}</string></value>
+          </param>
+          <param>
+              <value><string>${password}</string></value>
+          </param>
+      </params>
+  </methodCall>`;
 
-        // Store the token in SecureStore
-        await SecureStore.setItemAsync("userToken", token); // This should contain the token if successful
-    } catch (error) {
-        console.error("There was an error logging in", error);
-        throw error;
+  try {
+    const response = await axios.post(url, xml, {
+      headers: {
+        "Content-Type": "text/xml",
+      },
+    });
+
+    const userId = parseXmlResponse(response.data); // Parse this XML response to get the user ID
+
+    // Assuming user ID is stored if the login is successful
+    if (userId) {
+      // Optionally store the userId in SecureStore
+      await SecureStore.setItemAsync("userId", userId.toString());
+      return userId;
     }
+
+    return null; // Return null if login failed
+  } catch (error) {
+    console.error("Error in loginUser", error);
+    throw error;
+  }
 }
 
 export async function logoutUser() {
-    try {
-        console.log('inside logout');
 
-        // Fetch the token
-        const token = await getToken();
-
-        // Make a POST request to logout endpoint
-        /*
-        await axios.post(`${BASE_URL}/api/logout/`, {}, {
-            headers: {
-                'Authorization': `Token ${token}`
-            }
-        });
-        */
-        // Delete the token from SecureStore
-        await SecureStore.deleteItemAsync('userToken');
-        
-    } catch (error) {
-        console.error("Error during logout:", error);
-    }
-}
-
-export async function fetchTrips() {
-    const token = await getToken();
-    try {
-        const response = await axios.get(`${BASE_URL}/api/get_trips/`, {
-            headers: {
-                'Authorization': `Token ${token}`
-            }
-        });
-        return response.data;
-    } catch (error) {
-        console.error("Failed to fetch trips:", error);
-        throw error;
-    }
 }
 
 
-export async function getToken() {
-    try {
-        return await SecureStore.getItemAsync('userToken');
-    } catch (error) {
-        console.error("Error fetching token:", error);
-    }
-}
 
+// Function to parse the XML response
+const parseXmlResponse = (xmlResponse) => {
+  parseString(xmlResponse, (err, result) => {
+    if (err) {
+      console.error("Error parsing XML:", err);
+      return null;
+    } else {
+      // Extract the relevant data from the parsed response
+      const responseValue = result.methodResponse.params[0].param[0].value[0];
+      if ("int" in responseValue) {
+        return parseInt(responseValue.int[0]);
+      } else if (
+        "boolean" in responseValue &&
+        responseValue.boolean[0] === "0"
+      ) {
+        return null;
+      }
+    }
+  });
+};

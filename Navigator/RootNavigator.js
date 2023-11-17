@@ -4,7 +4,7 @@ import { createStackNavigator } from "@react-navigation/stack";
 import AuthNavigator from "./AuthNavigator";
 import MainTabs from "./MainTabs";
 import StackNavigator from "./StackNavigator";
-import { getToken } from "../service/authservice"; // Assuming you add the checkToken function to authservice
+
 import { AuthContext } from "../context/UserAuth";
 
 const Stack = createStackNavigator();

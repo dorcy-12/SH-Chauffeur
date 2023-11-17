@@ -20,14 +20,24 @@ function LoginScreen({ navigation }) {
   const { setIsUserLoggedIn } = useContext(AuthContext);
   const handleLogin = async () => {
     try {
-      //await loginUser(Id, pin);
-      setIsUserLoggedIn(true);
-      
+      const userId = await loginUser(Id, pin);  // Replace with appropriate arguments
+      if (userId) {
+        console.log(userId);
+        setIsUserLoggedIn(true);
+        console.log("we're in");
+        // Login successful
+        // Navigate to the main app or store the user session
+      } else {
+        console.log(userId)
+        console.log("we are not in");
+        // Login failed, show an error message
+      }
     } catch (error) {
-      // Handle login error, e.g., show an error message to the user.
-      console.error("Login failed:", error);
+      console.error('Login error', error);
+      // Handle error (e.g., show error message)
     }
   };
+
 
   return (
     <SafeAreaView style={styles.container}>

@@ -2,7 +2,7 @@ import React, {useContext} from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import Footer from '../Components/footer';
-import { logoutUser, getToken } from '../service/authservice';
+import { logoutUser} from '../service/authservice';
 import { AuthContext } from '../context/UserAuth';
 const ProfileScreen = ({ navigation }) => {
     const theme = useTheme();
@@ -12,7 +12,7 @@ const ProfileScreen = ({ navigation }) => {
     const handleLogout = async () => {
       console.log('in');
       await logoutUser();
-      console.log(await getToken());
+
       await setIsUserLoggedIn(false);
     };
     
