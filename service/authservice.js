@@ -31,7 +31,7 @@ export async function loginUser(username, password) {
       },
     });
 
-    const userId = parseXmlResponse(response.data); // Parse this XML response to get the user ID
+    const userId = await parseXmlResponse(response.data); // Parse this XML response to get the user ID
 
     // Assuming user ID is stored if the login is successful
     if (userId) {
@@ -47,29 +47,29 @@ export async function loginUser(username, password) {
   }
 }
 
-export async function logoutUser() {
-
-}
-
-
+export async function logoutUser() {}
 
 // Function to parse the XML response
 const parseXmlResponse = (xmlResponse) => {
-  parseString(xmlResponse, (err, result) => {
-    if (err) {
-      console.error("Error parsing XML:", err);
-      return null;
-    } else {
-      // Extract the relevant data from the parsed response
-      const responseValue = result.methodResponse.params[0].param[0].value[0];
-      if ("int" in responseValue) {
-        return parseInt(responseValue.int[0]);
-      } else if (
-        "boolean" in responseValue &&
-        responseValue.boolean[0] === "0"
-      ) {
-        return null;
+  return new Promise((resolve, reject) => {
+    parseString(xmlResponse, (err, result) => {
+      if (err) {
+        console.error("Error parsing XML:", err);
+        reject(err);
+      } else {
+        // Extract the relevant data from the parsed response
+        const responseValue = result.methodResponse.params[0].param[0].value[0];
+        if ("int" in responseValue) {
+          resolve(parseInt(responseValue.int[0]));
+        } else if (
+          "boolean" in responseValue &&
+          responseValue.boolean[0] === "0"
+        ) {
+          resolve(null);
+        } else {
+          resolve(null);
+        }
       }
-    }
+    });
   });
 };
