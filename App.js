@@ -6,10 +6,11 @@ import RootNavigator from "./Navigator/RootNavigator";
 import { ThemeProvider } from "./context/ThemeContext";
 import PushNotification from "react-native-push-notification";
 import PushNotificationIOS from "@react-native-community/push-notification-ios";
-
+import * as SecureStore from "expo-secure-store";
 import { AuthContext } from "./context/UserAuth";
 import { TripProvider } from "./context/TripContext";
-
+import loading from "./assets/loading.json"
+import LottieView from "lottie-react-native";
 /*
 PushNotification.configure({
   
@@ -54,17 +55,56 @@ PushNotification.configure({
 export default function App() {
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(null);
   const [userId, setUserId] = useState(null);
-  
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const checkToken = async () => {
+      const uid = await SecureStore.getItemAsync("userId");
+      if (uid) {
+        setIsUserLoggedIn(true);
+        setUserId(uid); // Assuming token is the userId
+      }
+      setIsLoading(false); // Update loading state after check
+    };
+
+    checkToken();
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ isUserLoggedIn, setIsUserLoggedIn, userId, setUserId }}>
+    <AuthContext.Provider
+      value={{ isUserLoggedIn, setIsUserLoggedIn, userId, setUserId }}
+    >
       <ThemeProvider>
-        <NavigationContainer>
-          <TripProvider>
-            <RootNavigator />
-          </TripProvider>
-        </NavigationContainer>
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <LottieView
+              source={loading}
+              autoPlay
+              loop
+              style={styles.lottieAnimation}
+            />
+          </View>
+        ) : (
+          <NavigationContainer>
+            <TripProvider>
+              <RootNavigator />
+            </TripProvider>
+          </NavigationContainer>
+        )}
       </ThemeProvider>
     </AuthContext.Provider>
   );
 }
 
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  lottieAnimation: {
+    width: 200, // Set the size as needed
+    height: 200, // Set the size as needed
+  },
+  // ... other styles
+});
