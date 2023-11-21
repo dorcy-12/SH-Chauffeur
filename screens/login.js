@@ -17,13 +17,14 @@ function LoginScreen({ navigation }) {
   const [Id, setId] = useState("");
   const [pin, setPin] = useState("");
   const [isPinVisible, setIsPinVisible] = useState(false);
-  const { setIsUserLoggedIn } = useContext(AuthContext);
+  const { setIsUserLoggedIn, setUserId } = useContext(AuthContext);
   const handleLogin = async () => {
     try {
       const userId = await loginUser(Id, pin);  // Replace with appropriate arguments
       if (userId) {
         console.log(userId);
         setIsUserLoggedIn(true);
+        setUserId(userId);
         console.log("we're in");
         // Login successful
         // Navigate to the main app or store the user session

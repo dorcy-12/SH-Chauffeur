@@ -5,71 +5,69 @@ import { parseString } from "react-native-xml2js";
 // Update with your Odoo server details
 const BASE_URL = "http://217.160.15.116";
 const DB_NAME = "default_sx3p1odoo";
-
 export async function loginUser(username, password) {
-  const url = `${BASE_URL}/xmlrpc/2/common`;
-  const xml = `<?xml version="1.0"?>
-  <methodCall>
-      <methodName>login</methodName>
-      <params>
-          <param>
-              <value><string>${DB_NAME}</string></value>
-          </param>
-          <param>
-              <value><string>${username}</string></value>
-          </param>
-          <param>
-              <value><string>${password}</string></value>
-          </param>
-      </params>
-  </methodCall>`;
+  const url = `${BASE_URL}/jsonrpc`;
+  const payload = {
+    jsonrpc: "2.0",
+    method: "call",
+    params: {
+      service: "common",
+      method: "login",
+      args: [DB_NAME, username, password],
+    },
+    id: Math.floor(Math.random() * 100),
+  };
 
   try {
-    const response = await axios.post(url, xml, {
-      headers: {
-        "Content-Type": "text/xml",
-      },
-    });
-
-    const userId = await parseXmlResponse(response.data); // Parse this XML response to get the user ID
-
-    // Assuming user ID is stored if the login is successful
+    const response = await axios.post(url, payload);
+    const userId = response.data.result;
+    console.log(userId);
     if (userId) {
-      // Optionally store the userId in SecureStore
       await SecureStore.setItemAsync("userId", userId.toString());
+      await SecureStore.setItemAsync("password", password);
       return userId;
     }
 
-    return null; // Return null if login failed
+    return null;
   } catch (error) {
     console.error("Error in loginUser", error);
     throw error;
   }
 }
+export async function fetchEmployeeProfile(userId) {
+  const url = `${BASE_URL}/jsonrpc`;
+  const payload = {
+    jsonrpc: "2.0",
+    method: "call",
+    params: {
+      service: "object",
+      method: "execute_kw",
+      args: [
+        DB_NAME,
+        userId,
+        await SecureStore.getItemAsync("password"),
+        "hr.employee",
+        "search_read",
+        [[["user_id", "=", userId]]],
+        { fields: ["name", "image_1920", "work_email"] },  // Adjust field names if necessary
+      ],
+    },
+    id: Math.floor(Math.random() * 100) + 1,
+  };
 
-export async function logoutUser() {}
+  try {
+    const response = await axios.post(url, payload);
+    const employeeData = response.data.result;
+    console.log(employeeData);
 
-// Function to parse the XML response
-const parseXmlResponse = (xmlResponse) => {
-  return new Promise((resolve, reject) => {
-    parseString(xmlResponse, (err, result) => {
-      if (err) {
-        console.error("Error parsing XML:", err);
-        reject(err);
-      } else {
-        // Extract the relevant data from the parsed response
-        const responseValue = result.methodResponse.params[0].param[0].value[0];
-        if ("int" in responseValue) {
-          resolve(parseInt(responseValue.int[0]));
-        } else if (
-          "boolean" in responseValue &&
-          responseValue.boolean[0] === "0"
-        ) {
-          resolve(null);
-        } else {
-          resolve(null);
-        }
-      }
-    });
-  });
-};
+    if (employeeData && employeeData.length > 0) {
+      const { name, image_1920, work_email } = employeeData[0];
+      return { name, profilePicture: image_1920, work_email };
+    }
+
+    return null;
+  } catch (error) {
+    console.error("Error in fetchEmployeeProfile", error);
+    throw error;
+  }
+}

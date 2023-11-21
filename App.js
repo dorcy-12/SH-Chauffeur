@@ -53,9 +53,10 @@ PushNotification.configure({
 
 export default function App() {
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(null);
-
+  const [userId, setUserId] = useState(null);
+  
   return (
-    <AuthContext.Provider value={{ isUserLoggedIn, setIsUserLoggedIn }}>
+    <AuthContext.Provider value={{ isUserLoggedIn, setIsUserLoggedIn, userId, setUserId }}>
       <ThemeProvider>
         <NavigationContainer>
           <TripProvider>
