@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useContext } from "react";
 import {
   StyleSheet,
   Text,
@@ -13,9 +13,10 @@ import {
 } from "react-native";
 import Card from "../Components/Card";
 import { useTheme } from "../context/ThemeContext";
-import { fetchTrips } from "../service/authservice";
+import { fetchVehicleServices } from "../service/authservice";
 import * as SecureStore from "expo-secure-store";
 import { useTrip } from "../context/TripContext";
+import { AuthContext } from "../context/UserAuth";
 
 const mockTrips = [
   {
@@ -47,9 +48,10 @@ const mockTrips = [
 function HomeScreen({ navigation }) {
   const theme = useTheme();
   const styles = createStyles(theme);
-  const [trips, setTrips] = useState([]);
+  const [services, setServices] = useState([]);
   const { activeTrip, setActiveTrip, allTrips, setAllTrips } = useTrip();
   const [refreshing, setRefreshing] = useState(false); // Add this line
+  const { setIsUserLoggedIn, userId } = useContext(AuthContext);
   const activeTrips = useMemo(
     () => allTrips.filter((trip) => !trip.is_completed),
     [allTrips]
@@ -57,26 +59,20 @@ function HomeScreen({ navigation }) {
 
   
   useEffect(() => {
-    const fetchInitialTrips = async () => {
-      if (allTrips.length === 0) {
-        // Only fetch if not already loaded
-        try {
-          const fetchedTripsData = await SecureStore.getItemAsync("trips");
-          if (fetchedTripsData) {
-            const fetchedTrips = JSON.parse(fetchedTripsData);
-            setAllTrips(fetchedTrips); // Set in the context
-          } else {
-            console.log("No trips found in SecureStore.");
-          }
-        } catch (error) {
-          console.error("Error fetching initial trips:", error);
-        }
+    const loadServices = async () => {
+      try {
+        // Assuming vehicleId is available or retrieved from context/user input
+        const fetchedServices = await fetchVehicleServices(userId);
+        console.log("IN vehicle services " + fetchedServices);    
+        setServices(fetchedServices);
+      } catch (error) {
+        console.error("Error loading services:", error);
       }
     };
 
-    fetchInitialTrips();
+    loadServices();
   }, []);
-
+  
   const loadTrips = async () => {
     setRefreshing(true);
     try {
@@ -88,13 +84,12 @@ function HomeScreen({ navigation }) {
     setRefreshing(false); // Set refreshing to false after loading is complete
   };
 
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Dienstplan</Text>
       </View>
-      {/* Content */}
 
       <FlatList
         data={activeTrips}
@@ -107,10 +102,9 @@ function HomeScreen({ navigation }) {
             }}
           >
             <Card
-              number={item.is_completed ? "true" : "false"}
-              location={item.end_location}
-              time={new Date(item.start_time).toLocaleTimeString().slice(0, 5)}
-              date={new Date(item.start_time).toLocaleDateString()}
+              number={item.vehicle_id[1]} // Vehicle name
+              location={item.service_type_id[1]} // Service type
+              time={item.date} // Service date
             />
           </TouchableOpacity>
         )}
@@ -121,6 +115,7 @@ function HomeScreen({ navigation }) {
     </SafeAreaView>
   );
 }
+
 
 const createStyles = (theme) =>
   StyleSheet.create({

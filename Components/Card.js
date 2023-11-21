@@ -3,33 +3,28 @@ import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons"; 
 import { useTheme } from "../context/ThemeContext";
 
-const Card = ({ number, time, date, location }) => {
+const Card = ({ vehicleName, serviceType, serviceDate }) => {
   const theme = useTheme();
   const styles = createStyles(theme);
 
   return (
     <View style={styles.cardContainer}>
       <View style={styles.cardHeader}>
-        <Ionicons name="location-sharp" size={18} color={theme.tertiary} />
-        <Text style={styles.locationText}>{location}</Text>
-        <Ionicons name="ellipsis-horizontal" size={24} color={theme.tertiary} />
+        <Ionicons name="car-sport" size={18} color={theme.tertiary} />
+        <Text style={styles.vehicleName}>{vehicleName}</Text>
+        <Ionicons name="build" size={18} color={theme.tertiary} />
       </View>
       <View style={styles.cardContent}>
-        <View style={styles.cardNumber}>
-          <Ionicons name="car" size={35} color={theme.secondary} />
-          <Text style={styles.carNumber}>{number}</Text>
+        <View style={styles.serviceInfo}>
+          <Ionicons name="hammer" size={35} color={theme.secondary} />
+          <Text style={styles.serviceType}>{serviceType}</Text>
         </View>
 
         <View style={styles.separator} />
 
-        <View style={styles.timeDateContainer}>
-          <View style={styles.timeWrapper}>
-            <Ionicons name="alarm-outline" size={18} color={'red'} />
-            <Text style={styles.timeText}>{time}</Text>
-          </View>
-          <View style={styles.dateWrapper}>
-            <Text style={styles.dateText}>{date}</Text>
-          </View>
+        <View style={styles.dateWrapper}>
+          <Ionicons name="calendar" size={18} color={'gray'} />
+          <Text style={styles.serviceDate}>{serviceDate}</Text>
         </View>
       </View>
     </View>
@@ -40,7 +35,6 @@ const createStyles = (theme) => StyleSheet.create({
   cardContainer: {
     flexDirection: "column",
     width: "90%",
-
     borderRadius: 10,
     backgroundColor: theme.tertiary,
     shadowColor: "#000",
@@ -50,7 +44,7 @@ const createStyles = (theme) => StyleSheet.create({
     elevation: 3,
     marginBottom: 20,
     overflow: "hidden",
-    alignSelf:"center"
+    alignSelf: "center"
   },
   cardHeader: {
     flexDirection: "row",
@@ -60,57 +54,42 @@ const createStyles = (theme) => StyleSheet.create({
     backgroundColor: theme.primary,
     padding: 8,
   },
-  locationText: {
+  vehicleName: {
     marginLeft: 5,
     flex: 1,
     color: theme.primaryText,
+    fontWeight: "bold",
   },
-  cardNumber: {
+  cardContent: {
+    padding: 10
+  },
+  serviceInfo: {
     flexDirection: "row",
     alignItems: "center",
     marginTop: 10,
   },
-  carNumber: {
+  serviceType: {
     marginLeft: 5,
     flex: 1,
     fontSize: 18,
     fontWeight: "bold",
-    color:"black",
+    color: "black",
   },
   separator: {
     height: 1,
     backgroundColor: "lightgray",
     marginVertical: 10,
-
     opacity: 0.5,
   },
-  cardContent:{
-    padding: 10
-  },
-  timeDateContainer: {
-    flexDirection: "row",
-  },
-  timeWrapper: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-  },
   dateWrapper: {
-    flex: 1,
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
   },
-  timeText: {
+  serviceDate: {
     marginLeft: 5,
-    color: 'red',
-  },
-  dateText: {
-    marginLeft: 15,
-    right: 0,
     color: 'gray',
   },
 });
-
 export default Card;
 

@@ -25,12 +25,13 @@ const ProfileScreen = ({ navigation }) => {
       const fetchAndSetUserProfile = async () => {
         console.log(userId);
         const userProfile = await fetchEmployeeProfile(userId);
+        console.log(userProfile);
         if (userProfile) {
           setProfileData({
             name: userProfile.name,
             imageUri: `data:image/png;base64,${userProfile.profilePicture}`,
             email: userProfile.work_email,
-          });
+          });  
         }
       };
   
