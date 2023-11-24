@@ -8,8 +8,8 @@ import PushNotification from "react-native-push-notification";
 import PushNotificationIOS from "@react-native-community/push-notification-ios";
 import * as SecureStore from "expo-secure-store";
 import { AuthContext } from "./context/UserAuth";
-import { TripProvider } from "./context/TripContext";
-import loading from "./assets/loading.json"
+import { ServiceProvider } from "./context/ServiceContext";
+import loading from "./assets/loading.json";
 import LottieView from "lottie-react-native";
 /*
 PushNotification.configure({
@@ -55,16 +55,24 @@ PushNotification.configure({
 export default function App() {
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(null);
   const [userId, setUserId] = useState(null);
+  const [employeeId, setEmployeeId] = useState(null);
+  const [password, setPassword] = useState(null);
+  const [shouldReloadServices,setShouldReloadServices] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkToken = async () => {
       const uid = await SecureStore.getItemAsync("userId");
-      if (uid) {
+      const password = await SecureStore.getItemAsync("password");
+      if (uid && password) {
+        setIsLoading(true);
         setIsUserLoggedIn(true);
         setUserId(uid); // Assuming token is the userId
+        setPassword(password);
       }
+
       setIsLoading(false); // Update loading state after check
+      console.log("app is re renderd" + isLoading);
     };
 
     checkToken();
@@ -72,7 +80,18 @@ export default function App() {
 
   return (
     <AuthContext.Provider
-      value={{ isUserLoggedIn, setIsUserLoggedIn, userId, setUserId }}
+      value={{
+        isUserLoggedIn,
+        setIsUserLoggedIn,
+        userId,
+        setUserId,
+        employeeId,
+        setEmployeeId,
+        password,
+        setPassword,
+        shouldReloadServices,
+        setShouldReloadServices
+      }}
     >
       <ThemeProvider>
         {isLoading ? (
@@ -86,9 +105,9 @@ export default function App() {
           </View>
         ) : (
           <NavigationContainer>
-            <TripProvider>
+            <ServiceProvider>
               <RootNavigator />
-            </TripProvider>
+            </ServiceProvider>
           </NavigationContainer>
         )}
       </ThemeProvider>

@@ -14,109 +14,109 @@ import {
 import Card from "../Components/Card";
 import { useTheme } from "../context/ThemeContext";
 import { fetchVehicleServices } from "../service/authservice";
-import * as SecureStore from "expo-secure-store";
-import { useTrip } from "../context/TripContext";
+import { useService } from "../context/ServiceContext";
 import { AuthContext } from "../context/UserAuth";
+import * as SecureStore from "expo-secure-store";
+import LottieView from "lottie-react-native";
 
-const mockTrips = [
-  {
-    id: 1,
-    vehicle: { vehicle_number: "1234" },
-    start_location: "",
-    end_location: "Davenportplatz",
-    start_time: new Date().toISOString(),
-    driven_time: 0,
-    distance: 0,
-    stopped: "",
-    userPath: null,
-    is_completed: false,
-  },
-  {
-    id: 2,
-    vehicle: { vehicle_number: "5678" },
-    start_location: "",
-    end_location: "Opelstrase, 12",
-    start_time: new Date().toISOString(),
-    driven_time: 0,
-    distance: 0,
-    stopped: "",
-    userPath: null,
-    is_completed: false,
-  },
-  // ... Add more mock trips as needed
-];
 function HomeScreen({ navigation }) {
   const theme = useTheme();
   const styles = createStyles(theme);
   const [services, setServices] = useState([]);
-  const { activeTrip, setActiveTrip, allTrips, setAllTrips } = useTrip();
+  const { activeService, setActiveService } = useService();
   const [refreshing, setRefreshing] = useState(false); // Add this line
-  const { setIsUserLoggedIn, userId } = useContext(AuthContext);
-  const activeTrips = useMemo(
-    () => allTrips.filter((trip) => !trip.is_completed),
-    [allTrips]
-  );
+  const { setIsUserLoggedIn, userId, password, setEmployeeId } =
+    useContext(AuthContext);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const { shouldReloadServices, setShouldReloadServices } =
+    useContext(AuthContext);
 
   
-  useEffect(() => {
-    const loadServices = async () => {
-      try {
-        // Assuming vehicleId is available or retrieved from context/user input
-        const fetchedServices = await fetchVehicleServices(userId);
-        console.log("IN vehicle services " + fetchedServices);    
-        setServices(fetchedServices);
-      } catch (error) {
-        console.error("Error loading services:", error);
-      }
-    };
 
+  const loadServices = async () => {
+    setIsLoading(true);
+    try {
+      // Assuming vehicleId is available or retrieved from context/user input
+      const fetchedServices = await fetchVehicleServices(
+        userId,
+        "todo",
+        password
+      );
+      const employeeid = await SecureStore.getItemAsync("employeeId");
+      console.log("the suer" + userId);
+      setServices(fetchedServices);
+      setEmployeeId(employeeid);
+      console.log(fetchedServices);
+      console.log(employeeid);
+    } catch (error) {
+      console.error("Error loading services:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  useEffect(() => {
     loadServices();
   }, []);
-  
-  const loadTrips = async () => {
-    setRefreshing(true);
-    try {
-      await SecureStore.setItemAsync("trips", JSON.stringify(mockTrips));
-      setAllTrips(mockTrips);
-    } catch (error) {
-      console.error("Error loading trips:", error);
+  useEffect(() => {
+    if (shouldReloadServices) {
+      reloadServices();
+      setShouldReloadServices(false);
+      console.log("services reloaded");
     }
-    setRefreshing(false); // Set refreshing to false after loading is complete
-  };
+  }, [shouldReloadServices]);
 
+  const reloadServices = async () => {
+    setRefreshing(true);
+    await loadServices(); // Call loadServices again to fetch new data
+    setRefreshing(false);
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Dienstplan</Text>
-      </View>
-
-      <FlatList
-        data={activeTrips}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            onPress={() => {
-              setActiveTrip(item);
-              navigation.navigate("Map");
-            }}
-          >
-            <Card
-              number={item.vehicle_id[1]} // Vehicle name
-              location={item.service_type_id[1]} // Service type
-              time={item.date} // Service date
-            />
-          </TouchableOpacity>
-        )}
-        contentContainerStyle={styles.content}
-        refreshing={refreshing} // Add this line
-        onRefresh={loadTrips} // Add this line
-      />
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <LottieView
+            source={require("../assets/loading.json")}
+            autoPlay
+            loop
+            style={styles.lottieAnimation}
+          />
+        </View>
+      ) : (
+        <>
+          <View style={styles.header}>
+            <Text style={styles.title}>Dienstplan</Text>
+          </View>
+          <FlatList
+            data={services}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                onPress={() => {
+                  setActiveService(item);
+                  navigation.navigate("ServiceDetailScreen");
+                }}
+              >
+                <Card
+                  vehicleName={item.vehicle_id[1]} // Vehicle name
+                  serviceType={item.service_type_id[1]} // Service type
+                  serviceDate={item.date} // Service date
+                  description={item.description}
+                />
+              </TouchableOpacity>
+            )}
+            contentContainerStyle={styles.content}
+            refreshing={refreshing}
+            onRefresh={reloadServices}
+          />
+        </>
+      )}
     </SafeAreaView>
   );
 }
 
-
+import MapScreen from "../screens/ServiceDetailScreen";
 const createStyles = (theme) =>
   StyleSheet.create({
     container: {
@@ -138,6 +138,15 @@ const createStyles = (theme) =>
     content: {
       paddingHorizontal: 10,
       // Add any other styling
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    lottieAnimation: {
+      width: 200, // Set the size as needed
+      height: 200, // Set the size as needed
     },
   });
 export default HomeScreen;

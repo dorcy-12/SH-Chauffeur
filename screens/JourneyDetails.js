@@ -1,8 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, BackHandler } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  BackHandler,
+} from "react-native";
 import MapView, { Polyline, Marker } from "react-native-maps";
 import * as SecureStore from "expo-secure-store";
-import { useTrip } from "../context/TripContext";
+import { useService } from "../context/ServiceContext";
 
 function JourneyDetailsScreen({ navigation, route }) {
   const { activeTrip, setActiveTrip, allTrips, setAllTrips } = useTrip();
@@ -19,24 +25,25 @@ function JourneyDetailsScreen({ navigation, route }) {
     const backAction = () => {
       return true; // This will prevent going back
     };
-  
+
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
       backAction
     );
-  
+
     return () => backHandler.remove();
   }, []);
-  
+
   const finishTrip = async () => {
     try {
       // Update the local state (allTrips) to reflect changes to activeTrip
-      const updatedTrips = allTrips.map(trip => trip.id === activeTrip.id ? activeTrip : trip);
+      const updatedTrips = allTrips.map((trip) =>
+        trip.id === activeTrip.id ? activeTrip : trip
+      );
       setAllTrips(updatedTrips);
-      
       // Save the updated trips back to Secure Store
       await SecureStore.setItemAsync("trips", JSON.stringify(updatedTrips));
-      
+
       // Navigate to the desired screen (e.g., "Documents Folder")
       navigation.navigate("documents");
     } catch (error) {
@@ -112,11 +119,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F2F2F2",
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   card: {
-    width: '90%',
+    width: "90%",
     padding: 16,
     borderRadius: 8,
     backgroundColor: "#fff",
@@ -127,7 +134,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   map: {
-    width: '100%',
+    width: "100%",
     height: 300,
     borderRadius: 8,
   },
@@ -140,7 +147,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#007BFF",
     padding: 10,
     borderRadius: 5,
-    alignItems: 'center',
+    alignItems: "center",
   },
   buttonText: {
     color: "#fff",

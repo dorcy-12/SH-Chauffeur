@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons"; 
 import { useTheme } from "../context/ThemeContext";
 
-const Card = ({ vehicleName, serviceType, serviceDate }) => {
+const Card = ({ vehicleName, serviceType, serviceDate,description }) => {
   const theme = useTheme();
   const styles = createStyles(theme);
 
@@ -12,12 +12,11 @@ const Card = ({ vehicleName, serviceType, serviceDate }) => {
       <View style={styles.cardHeader}>
         <Ionicons name="car-sport" size={18} color={theme.tertiary} />
         <Text style={styles.vehicleName}>{vehicleName}</Text>
-        <Ionicons name="build" size={18} color={theme.tertiary} />
       </View>
       <View style={styles.cardContent}>
         <View style={styles.serviceInfo}>
-          <Ionicons name="hammer" size={35} color={theme.secondary} />
           <Text style={styles.serviceType}>{serviceType}</Text>
+          <Text style={styles.descriptionText}>{description}</Text>
         </View>
 
         <View style={styles.separator} />
@@ -45,6 +44,11 @@ const createStyles = (theme) => StyleSheet.create({
     marginBottom: 20,
     overflow: "hidden",
     alignSelf: "center"
+  },
+  descriptionText: {
+    fontSize: 14,
+    color: theme.text,
+    marginVertical: 5,
   },
   cardHeader: {
     flexDirection: "row",
