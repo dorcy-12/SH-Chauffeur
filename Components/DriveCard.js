@@ -1,16 +1,21 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons'; // Ensure you have this dependency
 
 const DriveCard = ({ drive }) => {
-  const cardStyle = drive.status === 'successful' ? styles.successCard : styles.failureCard;
+  const cardStyle = drive.state === "done" ? styles.successCard : styles.failureCard;
+  const iconName = drive.state === "done" ? "check-circle" : "cancel";
 
   return (
     <View style={[styles.card, cardStyle]}>
-      <Text style={styles.dateText}>{drive.date}</Text>
-      <Text style={styles.destinationText}>{drive.destination}</Text>
-      <Text style={styles.statusText}>{drive.status.toUpperCase()}</Text>
+      <View style={styles.header}>
+        <MaterialIcons name={iconName} size={24} color={drive.state === "done" ? "#28a745" : "#dc3545"} />
+        <Text style={styles.dateText}>{drive.date}</Text>
+      </View>
+      <Text style={styles.destinationText}>{drive.description}</Text>
+      <Text style={styles.statusText}>{drive.state.toUpperCase()}</Text>
     </View>
-  );
+  ); 
 };
 
 const styles = StyleSheet.create({
@@ -23,17 +28,25 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 5,
+    backgroundColor: '#ffffff',
   },
   successCard: {
-    backgroundColor: '#d4edda', // Light green for success
+    borderColor: '#28a745',
+    borderWidth: 1,
   },
   failureCard: {
-    backgroundColor: '#f8d7da', // Light red for failure
+    borderColor: '#dc3545',
+    borderWidth: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
   },
   dateText: {
     fontSize: 16,
     color: '#333333',
-    marginBottom: 5,
+    marginLeft: 10,
   },
   destinationText: {
     fontSize: 18,

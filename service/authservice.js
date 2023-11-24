@@ -77,10 +77,10 @@ export async function fetchVehicleServices(userId, serviceState, password) {
   const url = `${BASE_URL}/jsonrpc`;
   console.log(userId);
   const pin = await SecureStore.getItemAsync("password");
- 
+
   const payload = {
     jsonrpc: "2.0",
-    method: "call",    
+    method: "call",
     params: {
       service: "object",
       method: "execute_kw",
@@ -156,10 +156,9 @@ export async function createEmployeeCheckIn(employeeId, userId, password) {
 
   // Get current time in UTC and format it
   const checkInTime = new Date().toISOString();
-  const formattedCheckInTime = checkInTime.replace('T', ' ').slice(0, 19);
+  const formattedCheckInTime = checkInTime.replace("T", " ").slice(0, 19);
 
   console.log(formattedCheckInTime);
-
 
   const payload = {
     jsonrpc: "2.0",
@@ -175,7 +174,7 @@ export async function createEmployeeCheckIn(employeeId, userId, password) {
         "create",
         [
           {
-            employee_id: parseInt(employeeId,10),
+            employee_id: parseInt(employeeId, 10),
             check_in: formattedCheckInTime, // Include the check-in time
             // Add other relevant fields if needed
           },
@@ -201,7 +200,7 @@ export async function createEmployeeCheckOut(checkInId, userId, password) {
 
   // Get current time in UTC and format it
   const checkOutTime = new Date().toISOString();
-  const formattedCheckOutTime = checkOutTime.replace('T', ' ').slice(0, 19);
+  const formattedCheckOutTime = checkOutTime.replace("T", " ").slice(0, 19);
 
   console.log(formattedCheckOutTime);
 
@@ -234,6 +233,49 @@ export async function createEmployeeCheckOut(checkInId, userId, password) {
     return response.data.result; // This might return a success status or the updated record ID
   } catch (error) {
     console.error("Error in createEmployeeCheckOut", error);
+    throw error;
+  }
+}
+export async function fetchCompletedServices(userId, serviceState, password) {
+  const url = `${BASE_URL}/jsonrpc`;
+
+  console.log(userId);
+  const pin = await SecureStore.getItemAsync("password");
+
+  const payload = {
+    jsonrpc: "2.0",
+    method: "call",
+    params: {
+      service: "object",
+      method: "execute_kw",
+      args: [
+        DB_NAME,
+        userId,
+        pin,
+        "fleet.vehicle.log.services",
+        "search_read",
+        [[["state", "=", serviceState]]],
+        {
+          fields: [
+            "service_type_id",
+            "vehicle_id",
+            "date",
+            "purchaser_id",
+            "state",
+            "description",
+            "notes",
+          ],
+        },
+      ],
+    },
+    id: Math.floor(Math.random() * 100) + 1,
+  };
+
+  try {
+    const response = await axios.post(url, payload);
+    return response.data.result;
+  } catch (error) {
+    console.error("Error in fetchVehicleServices", error);
     throw error;
   }
 }
