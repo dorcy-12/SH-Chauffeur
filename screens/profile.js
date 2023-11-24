@@ -5,15 +5,23 @@ import Footer from '../Components/footer';
 import { logoutUser} from '../service/authservice';
 import { AuthContext } from '../context/UserAuth';
 import { fetchEmployeeProfile } from "../service/authservice";
-
+import * as SecureStore from "expo-secure-store";
 
 const ProfileScreen = ({ navigation }) => {
     const theme = useTheme();
     const styles = createStyles(theme);
-    const { setIsUserLoggedIn, userId } = useContext(AuthContext);
+    const { setIsUserLoggedIn, userId, password, setUserId,setEmployeeId, setPassword } = useContext(AuthContext);
 
     const handleLogout = async () => {
+      await SecureStore.deleteItemAsync("userId");
+      await SecureStore.deleteItemAsync("employeeProfile");
+      setUserId(null);
+      setEmployeeId(null), 
+      setPassword(null),
+      setIsUserLoggedIn(false);
+      // Clear other sensitive data as needed
     };
+    
 
     const [profileData, setProfileData] = useState({
       name: '', // Default empty name
@@ -24,7 +32,7 @@ const ProfileScreen = ({ navigation }) => {
     useEffect(() => {
       const fetchAndSetUserProfile = async () => {
         console.log(userId);
-        const userProfile = await fetchEmployeeProfile(userId);
+        const userProfile = await fetchEmployeeProfile(userId, password);
         console.log(userProfile);
         if (userProfile) {
           setProfileData({
