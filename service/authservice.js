@@ -4,7 +4,7 @@ import { parseString } from "react-native-xml2js";
 
 // Update with your Odoo server details
 const BASE_URL = "http://217.160.15.116";
-const DB_NAME = "default_v2me1odoo";
+const DB_NAME = "Test";
 export async function loginUser(username, password) {
   const url = `${BASE_URL}/jsonrpc`;
   const payload = {
