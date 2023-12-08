@@ -18,6 +18,7 @@ import { useService } from "../context/ServiceContext";
 import { AuthContext } from "../context/UserAuth";
 import * as SecureStore from "expo-secure-store";
 import LottieView from "lottie-react-native";
+import PushNotification from "react-native-push-notification";
 
 function HomeScreen({ navigation }) {
   const theme = useTheme();
@@ -32,7 +33,35 @@ function HomeScreen({ navigation }) {
   const { shouldReloadServices, setShouldReloadServices } =
     useContext(AuthContext);
 
-  
+  useEffect(() => {
+    PushNotification.createChannel(
+      {
+        channelId: "timer-channel", // (required)
+        channelName: "Timer Channel", // (required)
+        channelDescription: "A channel for timer notifications", // (optional) default: undefined.
+        vibrate: false,
+        sound: true,
+        onlyAlertOnce: true,
+      },
+      (created) => console.log(`createChannel returned '${created}'`) // (optional) callback returns whether the channel was created, false means it already existed.
+    );
+  }, []);
+
+  const notifythis = () => {
+    PushNotification.localNotification({
+      channelId: "timer-channel",
+      id: 1,
+      message: `Timer läuft`,
+      playSound: true,
+      soundName: "default",
+      ongoing: true,
+      // Other notification options...
+    });
+  };
+
+  const notnotifythis = () => {
+    PushNotification.cancelLocalNotification({id: 1});
+  };
 
   const loadServices = async () => {
     setIsLoading(true);
@@ -112,11 +141,25 @@ function HomeScreen({ navigation }) {
           />
         </>
       )}
+      <TouchableOpacity
+        onPress={() => {
+          notifythis();
+        }}
+      >
+       <Text>i am here to notify</Text> 
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={() => {
+          notnotifythis();
+        }}
+      >
+       <Text>i am not here to notify</Text> 
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
 
-import MapScreen from "../screens/ServiceDetailScreen";
 const createStyles = (theme) =>
   StyleSheet.create({
     container: {

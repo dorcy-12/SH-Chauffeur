@@ -1,6 +1,6 @@
 import React, { useState, useEffect, createContext } from "react";
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, Alert} from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import RootNavigator from "./Navigator/RootNavigator";
 import { ThemeProvider } from "./context/ThemeContext";
@@ -11,9 +11,13 @@ import { AuthContext } from "./context/UserAuth";
 import { ServiceProvider } from "./context/ServiceContext";
 import loading from "./assets/loading.json";
 import LottieView from "lottie-react-native";
-/*
+import {
+  requestUserPermission,
+  NotificationListener,
+} from "./src/Utils/pushnotifications";
+import messaging from "@react-native-firebase/messaging";
+
 PushNotification.configure({
-  
   onRegister: function (token) {
     console.log("TOKEN:", token);
   },
@@ -35,9 +39,9 @@ PushNotification.configure({
 
     // process the action
   },
-  channelId:"timer-channel",
-   // (optional) Called when the user fails to register for remote notifications. Typically occurs when APNS is having issues, or the device is a simulator. (iOS)
-  onRegistrationError: function(err) {
+  channelId: "timer-channel",
+  // (optional) Called when the user fails to register for remote notifications. Typically occurs when APNS is having issues, or the device is a simulator. (iOS)
+  onRegistrationError: function (err) {
     console.error(err.message, err);
   },
 
@@ -47,17 +51,15 @@ PushNotification.configure({
     sound: true,
   },
   popInitialNotification: true,
-  requestPermissions: Platform.OS === 'ios'
-
+  requestPermissions: Platform.OS === "ios",
 });
-*/
 
 export default function App() {
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(null);
   const [userId, setUserId] = useState(null);
   const [employeeId, setEmployeeId] = useState(null);
   const [password, setPassword] = useState(null);
-  const [shouldReloadServices,setShouldReloadServices] = useState(false);
+  const [shouldReloadServices, setShouldReloadServices] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -78,6 +80,15 @@ export default function App() {
     checkToken();
   }, []);
 
+  useEffect(() => {
+    async function setupNotifications() {
+      await requestUserPermission();
+      NotificationListener();
+    }
+
+    setupNotifications();
+  }, []); // Adding an empty dependency array to run only once
+
   return (
     <AuthContext.Provider
       value={{
@@ -90,7 +101,7 @@ export default function App() {
         password,
         setPassword,
         shouldReloadServices,
-        setShouldReloadServices
+        setShouldReloadServices,
       }}
     >
       <ThemeProvider>
