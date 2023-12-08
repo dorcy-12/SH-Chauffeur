@@ -6,12 +6,16 @@
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "build-app": "eas build --platform android --profile development"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "^1.21.0",
     "@react-native-community/geolocation": "^3.0.6",
     "@react-native-community/masked-view": "^0.1.11",
     "@react-native-community/push-notification-ios": "^1.11.0",
+    "@react-native-firebase/app": "^18.7.1",
+    "@react-native-firebase/messaging": "^18.7.1",
     "@react-navigation/bottom-tabs": "^6.5.8",
     "@react-navigation/native": "^6.1.7",
     "@react-navigation/stack": "^6.3.17",
@@ -23,6 +27,7 @@
     "expo-splash-screen": "~0.20.5",
     "expo-status-bar": "~1.6.0",
     "expo-updates": "~0.18.14",
+    "lottie-react-native": "5.1.6",
     "react": "18.2.0",
     "react-native": "0.72.4",
     "react-native-background-timer": "^2.4.1",
@@ -31,7 +36,8 @@
     "react-native-push-notification": "^8.1.1",
     "react-native-reanimated": "^3.4.2",
     "react-native-safe-area-context": "^4.7.1",
-    "react-native-screens": "^3.24.0"
+    "react-native-screens": "^3.24.0",
+    "react-native-xml2js": "^1.0.3"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"

@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect} from "react";
 import {
   View,
   Text,
@@ -9,7 +9,11 @@ import {
   SafeAreaView,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { loginUser, logoutUser } from "../service/authservice";
+import {
+  loginUser,
+  logoutUser,
+  fetchEmployeeProfile,
+} from "../service/authservice";
 import * as SecureStore from "expo-secure-store";
 import { AuthContext } from "../context/UserAuth";
 
@@ -17,17 +21,51 @@ function LoginScreen({ navigation }) {
   const [Id, setId] = useState("");
   const [pin, setPin] = useState("");
   const [isPinVisible, setIsPinVisible] = useState(false);
-  const { setIsUserLoggedIn } = useContext(AuthContext);
+  const {
+    setIsUserLoggedIn,
+    setUserId,
+    userId,
+    employeeId,
+    setEmployeeId,
+    password,
+    setPassword,
+  } = useContext(AuthContext);
+
+
   const handleLogin = async () => {
     try {
-      //await loginUser(Id, pin);
-      setIsUserLoggedIn(true);
+      const uid = await loginUser(Id, pin); // Replace with appropriate arguments
+      if (uid) {
+        const employeeProfile = await fetchEmployeeProfile(uid,pin);
+        setUserId(uid);
+        setEmployeeId(employeeProfile.id)
+        setPassword(pin);
+        if (employeeProfile && userId && password) {
+          console.log(userId);
+          setIsUserLoggedIn(true);
       
+          console.log("we are in " + password); 
+        }
+        else{
+          console.log("employee profile not found");
+        }
+      } else {
+        console.log(userId);
+        console.log("we are not in");
+      }
     } catch (error) {
-      // Handle login error, e.g., show an error message to the user.
-      console.error("Login failed:", error);
+      console.error("Login error", error);
     }
   };
+  useEffect(() => {
+    console.log("Password updated in context:", password);
+  }, [password]);
+
+  useEffect(() => {
+    console.log("userId updated in context:", userId);
+  }, [userId]);
+  
+  
 
   return (
     <SafeAreaView style={styles.container}>

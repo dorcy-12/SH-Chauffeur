@@ -1,37 +1,68 @@
-import React, {useContext} from 'react';
+import React, {useContext,useState, useEffect} from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import Footer from '../Components/footer';
-import { logoutUser, getToken } from '../service/authservice';
+import { logoutUser} from '../service/authservice';
 import { AuthContext } from '../context/UserAuth';
+import { fetchEmployeeProfile } from "../service/authservice";
+import * as SecureStore from "expo-secure-store";
+
 const ProfileScreen = ({ navigation }) => {
     const theme = useTheme();
     const styles = createStyles(theme);
-    const { setIsUserLoggedIn } = useContext(AuthContext);
+    const { setIsUserLoggedIn, userId, password, setUserId,setEmployeeId, setPassword } = useContext(AuthContext);
 
     const handleLogout = async () => {
-      console.log('in');
-      await logoutUser();
-      console.log(await getToken());
-      await setIsUserLoggedIn(false);
+      await SecureStore.deleteItemAsync("userId");
+      await SecureStore.deleteItemAsync("employeeProfile");
+      setUserId(null);
+      setEmployeeId(null), 
+      setPassword(null),
+      setIsUserLoggedIn(false);
+      // Clear other sensitive data as needed
     };
     
-    return (
-      <View style={styles.container}>
-        <View style={styles.content}>
-          <Image
-            source={{ uri: 'https://placebeard.it/640x360' }}
-            style={styles.profileImage}
-          />
-          <Text style={styles.profileName}>John Doe</Text>
-          <Text style={styles.profileEmail}>john.doe@example.com</Text>
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Text style={styles.logoutText}>Log Out</Text>
-          </TouchableOpacity>
-        </View>
+
+    const [profileData, setProfileData] = useState({
+      name: '', // Default empty name
+      imageUri: 'https://placebeard.it/640x360', // Default image URL
+      email: '',
+    });
+  
+    useEffect(() => {
+      const fetchAndSetUserProfile = async () => {
+        console.log(userId);
+        const userProfile = await fetchEmployeeProfile(userId, password);
+        console.log(userProfile);
+        if (userProfile) {
+          setProfileData({
+            name: userProfile.name,
+            imageUri: `data:image/png;base64,${userProfile.profilePicture}`,
+            email: userProfile.work_email,
+          });  
+        }
+      };
+  
+      fetchAndSetUserProfile();
+    }, []);
+    
+   
+  return (
+    <View style={styles.container}>
+      <View style={styles.content}>
+        <Image
+          source={{ uri: profileData.imageUri }}
+          style={styles.profileImage}
+        />
+        <Text style={styles.profileName}>{profileData.name}</Text>
+        <Text style={styles.profileEmail}>{profileData.email}</Text>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Text style={styles.logoutText}>Log Out</Text>
+        </TouchableOpacity>
       </View>
-    );
-  };
+    </View>
+  );
+};
   
 
   const createStyles = (theme) => StyleSheet.create({

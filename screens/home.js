@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useContext } from "react";
 import {
   StyleSheet,
   Text,
@@ -13,59 +13,149 @@ import {
 } from "react-native";
 import Card from "../Components/Card";
 import { useTheme } from "../context/ThemeContext";
-import { fetchTrips } from "../service/authservice";
+import { fetchVehicleServices } from "../service/authservice";
+import { useService } from "../context/ServiceContext";
+import { AuthContext } from "../context/UserAuth";
+import * as SecureStore from "expo-secure-store";
+import LottieView from "lottie-react-native";
+import PushNotification from "react-native-push-notification";
 
 function HomeScreen({ navigation }) {
   const theme = useTheme();
   const styles = createStyles(theme);
-  const [trips, setTrips] = useState([]);
-
+  const [services, setServices] = useState([]);
+  const { activeService, setActiveService } = useService();
   const [refreshing, setRefreshing] = useState(false); // Add this line
+  const { setIsUserLoggedIn, userId, password, setEmployeeId } =
+    useContext(AuthContext);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const { shouldReloadServices, setShouldReloadServices } =
+    useContext(AuthContext);
 
   useEffect(() => {
-    loadTrips();
+    PushNotification.createChannel(
+      {
+        channelId: "timer-channel", // (required)
+        channelName: "Timer Channel", // (required)
+        channelDescription: "A channel for timer notifications", // (optional) default: undefined.
+        vibrate: false,
+        sound: true,
+        onlyAlertOnce: true,
+      },
+      (created) => console.log(`createChannel returned '${created}'`) // (optional) callback returns whether the channel was created, false means it already existed.
+    );
   }, []);
 
-  const loadTrips = async () => {
-    setRefreshing(true);
+  const notifythis = () => {
+    PushNotification.localNotification({
+      channelId: "timer-channel",
+      id: 1,
+      message: `Timer läuft`,
+      playSound: true,
+      soundName: "default",
+      ongoing: true,
+      // Other notification options...
+    });
+  };
+
+  const notnotifythis = () => {
+    PushNotification.cancelLocalNotification({id: 1});
+  };
+
+  const loadServices = async () => {
+    setIsLoading(true);
     try {
-      const fetchedTrips = await fetchTrips();
-      setTrips(fetchedTrips);
+      // Assuming vehicleId is available or retrieved from context/user input
+      const fetchedServices = await fetchVehicleServices(
+        userId,
+        "todo",
+        password
+      );
+      const employeeid = await SecureStore.getItemAsync("employeeId");
+      console.log("the suer" + userId);
+      setServices(fetchedServices);
+      setEmployeeId(employeeid);
+      console.log(fetchedServices);
+      console.log(employeeid);
     } catch (error) {
-      console.error("Error loading trips:", error);
+      console.error("Error loading services:", error);
+    } finally {
+      setIsLoading(false);
     }
-    setRefreshing(false); // Set refreshing to false after loading is complete
+  };
+  useEffect(() => {
+    loadServices();
+  }, []);
+  useEffect(() => {
+    if (shouldReloadServices) {
+      reloadServices();
+      setShouldReloadServices(false);
+      console.log("services reloaded");
+    }
+  }, [shouldReloadServices]);
+
+  const reloadServices = async () => {
+    setRefreshing(true);
+    await loadServices(); // Call loadServices again to fetch new data
+    setRefreshing(false);
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Dienstplan</Text>
-      </View>
-      {/* Content */}
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <LottieView
+            source={require("../assets/loading.json")}
+            autoPlay
+            loop
+            style={styles.lottieAnimation}
+          />
+        </View>
+      ) : (
+        <>
+          <View style={styles.header}>
+            <Text style={styles.title}>Dienstplan</Text>
+          </View>
+          <FlatList
+            data={services}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                onPress={() => {
+                  setActiveService(item);
+                  navigation.navigate("ServiceDetailScreen");
+                }}
+              >
+                <Card
+                  vehicleName={item.vehicle_id[1]} // Vehicle name
+                  serviceType={item.service_type_id[1]} // Service type
+                  serviceDate={item.date} // Service date
+                  description={item.description}
+                />
+              </TouchableOpacity>
+            )}
+            contentContainerStyle={styles.content}
+            refreshing={refreshing}
+            onRefresh={reloadServices}
+          />
+        </>
+      )}
+      <TouchableOpacity
+        onPress={() => {
+          notifythis();
+        }}
+      >
+       <Text>i am here to notify</Text> 
+      </TouchableOpacity>
 
-      <FlatList
-        data={trips}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            onPress={() =>
-              navigation.navigate("Map", { location: item.end_location })
-            }
-          >
-            <Card
-              number={item.vehicle.vehicle_number}
-              location={item.end_location}
-              time={new Date(item.start_time).toLocaleTimeString().slice(0, 4)}
-              date={new Date(item.start_time).toLocaleDateString()}
-            />
-          </TouchableOpacity>
-        )}
-        contentContainerStyle={styles.content}
-        refreshing={refreshing} // Add this line
-        onRefresh={loadTrips} // Add this line
-      />
+      <TouchableOpacity
+        onPress={() => {
+          notnotifythis();
+        }}
+      >
+       <Text>i am not here to notify</Text> 
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -91,6 +181,15 @@ const createStyles = (theme) =>
     content: {
       paddingHorizontal: 10,
       // Add any other styling
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    lottieAnimation: {
+      width: 200, // Set the size as needed
+      height: 200, // Set the size as needed
     },
   });
 export default HomeScreen;

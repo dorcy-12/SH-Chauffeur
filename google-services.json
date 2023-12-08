@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "551304401031",
+    "project_id": "sh-app-push-notifications",
+    "storage_bucket": "sh-app-push-notifications.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:551304401031:android:b28ce94a5c8cb8439da822",
+        "android_client_info": {
+          "package_name": "com.dorcy.SHChauffer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDjzHnfUUUCZb1cJaOSIQMvT9Q7VAh4eSs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

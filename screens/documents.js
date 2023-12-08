@@ -1,42 +1,82 @@
-import React from "react";
-import { View, Text, ScrollView, StyleSheet, StatusBar } from "react-native";
+import React, { useState, useEffect, useContext } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  StatusBar,
+  FlatList,
+  SafeAreaView,
+} from "react-native";
 import { useTheme } from "../context/ThemeContext";
-import { Ionicons } from "@expo/vector-icons";
-import TripCard from "../Components/TripCard";
+import DriveCard from "../Components/DriveCard";
+import { AuthContext } from "../context/UserAuth";
+import {fetchVehicleServices } from "../service/authservice"; // Import your API call function
 
 const DocumentsScreen = () => {
   const theme = useTheme();
   const styles = createStyles(theme);
+  const [refreshing, setRefreshing] = useState(false);
+  const [drives, setDrives] = useState([]); // State to store the drives
+  const {
+    setIsUserLoggedIn,
+    userId,
+    password,
+    setEmployeeId,
+    shouldReloadServices,
+    setShouldReloadServices,
+  } = useContext(AuthContext);
+  const loadDrives = async () => {
+    try {
+      const cancelledDrives = await fetchVehicleServices(userId, "cancelled", password);
+      console.log("Cancelled Drives:", cancelledDrives);
+  
+      // Fetch 'done' drives
+      const doneDrives = await fetchVehicleServices(userId, "done", password);
+      console.log("Done Drives:", doneDrives);
+  
+      // Combine both arrays
+      const combinedDrives = [...cancelledDrives, ...doneDrives];
+      console.log("Combined Drives:", combinedDrives);
+  
+      // Update state with combined drives
+      setDrives(combinedDrives);
+    } catch (error) {
+      console.error("Error fetching drives:", error);
+    }
+  };
 
-  const trips = [
-    {
-      carNumber: "SH 302",
-      startTime: "8:30 AM",
-      endTime: "10:00 AM",
-      date: "20th August 2023",
-      kilometers: "45",
-    },
-    {
-      carNumber: "SH 303",
-      startTime: "8:30 AM",
-      endTime: "10:00 AM",
-      date: "24th August 2023",
-      kilometers: "45",
-    },
-    // ... Add more trip objects here
-  ];
+  useEffect(() => {
+    loadDrives();
+  }, []);
+  useEffect(() => {
+    if (shouldReloadServices) {
+      reloadServices();
+      setShouldReloadServices(false);
+      console.log("services reloaded");
+    }
+  }, [shouldReloadServices]);
+
+  const reloadServices = async () => {
+    setRefreshing(true);
+    await loadDrives(); // Call loadServices again to fetch new data
+    setRefreshing(false);
+  };
 
   return (
-    <ScrollView style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Fahrten</Text>
       </View>
-      <View style={styles.content}>
-        {trips.map((trip, index) => (
-          <TripCard key={index} trip={trip} />
-        ))}
-      </View>
-    </ScrollView>
+      <FlatList
+        data={drives}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => <DriveCard drive={item} />}
+        contentContainerStyle={styles.content}
+        refreshing={refreshing}
+        onRefresh={reloadServices}
+      />
+    </SafeAreaView>
   );
 };
 
@@ -45,26 +85,28 @@ const createStyles = (theme) =>
     container: {
       flex: 1,
       backgroundColor: theme.tertiary,
-      paddingTop: Platform.OS == "android" ? StatusBar.currentHeight : 0,
+      paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
     },
     content: {
       flex: 1,
       alignItems: "center",
       justifyContent: "center",
-      // Add any other styling
     },
     header: {
-        width: "100%",
-        alignItems: "center",
-        justifyContent: "center",
-        marginBottom:30,
-        marginTop:20
-        // Add any other styling
-      },
-      title: {
-        fontSize: 24,
-        fontWeight: "bold",
-      },
+      width: "100%",
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 30,
+      marginTop: 20,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: "bold",
+    },
+    content: {
+      paddingHorizontal: 10,
+      // Add any other styling
+    },
   });
 
 export default DocumentsScreen;
