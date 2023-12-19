@@ -4,7 +4,7 @@ import { parseString } from "react-native-xml2js";
 
 // Update with your Odoo server details
 const BASE_URL = "http://217.160.15.116";
-const DB_NAME = "Test";
+const DB_NAME = "default_xnqp1odoo";
 export async function loginUser(username, password) {
   const url = `${BASE_URL}/jsonrpc`;
   const payload = {
@@ -276,6 +276,118 @@ export async function fetchCompletedServices(userId, serviceState, password) {
     return response.data.result;
   } catch (error) {
     console.error("Error in fetchVehicleServices", error);
+    throw error;
+  }
+}
+export async function fetchPartnerId(userId, password) {
+  const url = `${BASE_URL}/jsonrpc`;
+  const pin = await SecureStore.getItemAsync("password");
+
+  const payload = {
+    jsonrpc: "2.0",
+    method: "call",
+    params: {
+      service: "object",
+      method: "execute_kw",
+      args: [
+        DB_NAME,
+        userId,
+        pin,
+        "res.users",
+        "read",
+        [parseInt(userId, 10)],
+        { fields: ["partner_id"] }, // Fields to fetch
+      ],
+    },
+    id: Math.floor(Math.random() * 100) + 1,
+  };
+
+  try {
+    const response = await axios.post(url, payload);
+    const userData = response.data.result;
+    console.log(userData);
+
+    if (userData && userData.length > 0) {
+      const { partner_id } = userData[0];
+      return partner_id[0]; // Returns the partner_id
+    }
+    return null;
+  } catch (error) {
+    console.error("Error in fetchPartnerId", error);
+    throw error;
+  }
+}
+export async function uploadFirebaseToken(
+  partnerId,
+  firebaseToken,
+  userId,
+  password
+) {
+  const url = `${BASE_URL}/jsonrpc`;
+  const pin = await SecureStore.getItemAsync("password");
+
+  const payload = {
+    jsonrpc: "2.0",
+    method: "call",
+    params: {
+      service: "object",
+      method: "execute_kw",
+      args: [
+        DB_NAME,
+        userId,
+        pin,
+        "mail.firebase",
+        "create",
+        [
+          {
+            partner_id: parseInt(partnerId, 10),
+            token: firebaseToken,
+            os: "Android", // Example: Specify the OS or make it a parameter
+          },
+        ],
+      ],
+    },
+    id: Math.floor(Math.random() * 100) + 1,
+  };
+
+  try {
+    const response = await axios.post(url, payload);
+    const result = response.data.result;
+    console.log("Firebase token uploaded. Record ID:", result);
+    return result; // Returns the ID of the created record
+  } catch (error) {
+    console.error("Error in uploadFirebaseToken", error);
+    throw error;
+  }
+}
+export async function deleteUserFirebaseTokens(userId) {
+  const url = `${BASE_URL}/jsonrpc`;
+  const pin = await SecureStore.getItemAsync("password");
+  const payload = {
+    jsonrpc: "2.0",
+    method: "call",
+    params: {
+      service: "object",
+      method: "execute_kw",
+      args: [
+        DB_NAME,
+        userId,
+        pin,
+        "mail.firebase",
+        "unlink",
+        [[["user_id", "=", parseInt(userId, 10)]]], // Domain to find tokens by user_id
+      ],
+    },
+    id: Math.floor(Math.random() * 100) + 1,
+  };
+
+  try {
+    // Directly delete all token records for the user
+    const response = await axios.post(url, payload);
+    console.log("Firebase tokens deleted successfully for user:", userId);
+    return response.data.result; // True if successful
+  } catch (error) {
+    console.error("Error in deleteUserFirebaseTokens", error);
     throw error;
   }
 }

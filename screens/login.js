@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect} from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
   View,
   Text,
@@ -13,9 +13,12 @@ import {
   loginUser,
   logoutUser,
   fetchEmployeeProfile,
+  uploadFirebaseToken,
+  fetchPartnerId,
 } from "../service/authservice";
 import * as SecureStore from "expo-secure-store";
 import { AuthContext } from "../context/UserAuth";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 function LoginScreen({ navigation }) {
   const [Id, setId] = useState("");
@@ -31,32 +34,46 @@ function LoginScreen({ navigation }) {
     setPassword,
   } = useContext(AuthContext);
 
-
   const handleLogin = async () => {
     try {
-      const uid = await loginUser(Id, pin); // Replace with appropriate arguments
+      const fcmtoken = await AsyncStorage.getItem("token");
+      const uid = await loginUser(Id, pin);
       if (uid) {
-        const employeeProfile = await fetchEmployeeProfile(uid,pin);
+        const employeeProfile = await fetchEmployeeProfile(uid, pin);
         setUserId(uid);
-        setEmployeeId(employeeProfile.id)
+        setEmployeeId(employeeProfile.id);
         setPassword(pin);
+
         if (employeeProfile && userId && password) {
-          console.log(userId);
+          console.log("User ID:", userId);
           setIsUserLoggedIn(true);
-      
-          console.log("we are in " + password); 
-        }
-        else{
-          console.log("employee profile not found");
+          console.log("Logged in successfully");
+
+          // Fetch the res.partner_id
+          const partnerId = await fetchPartnerId(uid, pin);
+          if (partnerId) {
+            console.log("Partner ID:", partnerId);
+            const uploadResult = await uploadFirebaseToken(
+              partnerId,
+              fcmtoken,
+              uid,
+              pin
+            );
+            console.log("Firebase token uploaded. Record ID:", uploadResult);
+          } else {
+            console.log("Failed to retrieve partner ID");
+          }
+        } else {
+          console.log("Employee profile not found");
         }
       } else {
-        console.log(userId);
-        console.log("we are not in");
+        console.log("Authentication failed");
       }
     } catch (error) {
       console.error("Login error", error);
     }
   };
+
   useEffect(() => {
     console.log("Password updated in context:", password);
   }, [password]);
@@ -64,8 +81,6 @@ function LoginScreen({ navigation }) {
   useEffect(() => {
     console.log("userId updated in context:", userId);
   }, [userId]);
-  
-  
 
   return (
     <SafeAreaView style={styles.container}>
