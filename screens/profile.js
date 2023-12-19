@@ -1,7 +1,7 @@
 import React, {useContext,useState, useEffect} from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
-import Footer from '../Components/footer';
+
 import { logoutUser} from '../service/authservice';
 import { AuthContext } from '../context/UserAuth';
 import { fetchEmployeeProfile,deleteUserFirebaseTokens } from "../service/authservice";
