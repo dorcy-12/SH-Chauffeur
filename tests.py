@@ -3,21 +3,22 @@ import certifi
 import xmlrpc.client
 from datetime import datetime
 dorcy, dorcypw = "h.dorcy@sh-personal.com", "amatama"
-admin, adminpw = "default@localhost.localdomain", "%z1S5#t_Za"
+admin, adminpw = "default@localhost.localdomain", "9N*Aj8#tW9"
 
 #context = ssl.create_default_context(cafile=certifi.where())
 #info = xmlrpc.client.ServerProxy('https://demo.odoo.com/start', context = context).start()
 #url,db, username, password = info['host'], info['database'], info['user'], info['password']
 
 url = "http://217.160.15.116"
-db = "default_sx3p1odoo"
+db = "default_xnqp1odoo"
+
 username = dorcy
 password = dorcypw
 
 common = xmlrpc.client.ServerProxy('{}/xmlrpc/2/common'.format(url))
 uid = common.authenticate(db, username, password, {})
 models = xmlrpc.client.ServerProxy('{}/xmlrpc/2/object'.format(url))
-
+print(uid)
 def get_all_employees():
     employees = models.execute_kw(
         db, uid, password,
@@ -29,7 +30,7 @@ def get_all_employees():
     for employee in employees:
         print(f"Employee ID: {employee['id']}, Name: {employee['name']}")
 #
-get_all_employees()
+#get_all_employees()
 
 #models_list = models.execute_kw(
 #    db, uid, password,
@@ -55,6 +56,8 @@ get_all_employees()
     #print(f"Service Type: {record['service_type_id']},Date: {record['date']}, Car: {record['vehicle_id']}, driver:{record['purchaser_id']}, state: {record['state']}")
 
 def check_in():
+
+
     check_in_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     attendance_id = models.execute_kw(
         db, uid, password,
@@ -64,4 +67,50 @@ def check_in():
     print(f"Checked in with ID: {attendance_id}")
 
 employee_id = 4  # Replace with the actual employee ID
-check_in()
+#check_in()
+message_details = {
+    'body': "Hello, this is a test message.",
+    'subject': "Message Subject",
+    'message_type': "comment",  # or "notification", depending on your need
+    'partner_ids': [(4, 12)],  # partner_id to notify
+    # Add other fields if necessary
+}
+
+# Send the message to a specific record
+record_id = 12  # Example record ID of the 'res.partner' model
+
+def sendMessage():
+
+    message_id = models.execute_kw(
+    db, uid, password,
+    'mail.channel', 'message_post',
+    [5],  # ID of the channel
+    {
+        'body': "Hi my friend, is everything okay in nenver land",
+        'message_type': 'comment',
+        'subtype_xmlid': 'mail.mt_comment',
+        # Add other parameters if necessary
+    })
+    print(f"Message sent successfully with ID: {message_id}")
+
+
+sendMessage()
+
+def getpartners():
+    responses = models.execute_kw(
+        db, uid, password,
+        "res.users", "search_read",
+        [[]],  # List of IDs (in this case, just one)
+        {'fields': ["partner_id"]}
+    )
+    for response in responses:
+        print(response)
+#getpartners()
+def getchannels():
+    responses = models.execute_kw(db, uid, password,
+                                 'mail.channel', 'search_read',
+                                 [[]],
+                                 { 'fields': ['id','name', 'description', 'channel_type', 'public']})
+    for response in responses:
+        print(response)
+#getchannels()
