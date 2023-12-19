@@ -19,6 +19,7 @@ import {
 import * as SecureStore from "expo-secure-store";
 import { AuthContext } from "../context/UserAuth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { NavigationHelpersContext } from "@react-navigation/native";
 
 function LoginScreen({ navigation }) {
   const [Id, setId] = useState("");
@@ -35,6 +36,7 @@ function LoginScreen({ navigation }) {
   } = useContext(AuthContext);
 
   const handleLogin = async () => {
+    /*
     try {
       const fcmtoken = await AsyncStorage.getItem("token");
       const uid = await loginUser(Id, pin);
@@ -72,6 +74,7 @@ function LoginScreen({ navigation }) {
     } catch (error) {
       console.error("Login error", error);
     }
+    */
   };
 
   useEffect(() => {

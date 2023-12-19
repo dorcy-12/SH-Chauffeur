@@ -17,14 +17,15 @@ uid = common.authenticate(db, username, password, {})
 print(uid)
 models = xmlrpc.client.ServerProxy('{}/xmlrpc/2/object'.format(url))
 print(uid)
+
+
 def get_all_employees():
-    try:
-        employees = models.execute_kw(
-            db, uid, password,
-            'hr.employee', 'search_read',
-            [[]],  # Empty list for search domain to get all records
-            {'fields': ['id', 'name']}  # Fields you want to fetch, such as 'id' and 'name'
-        )
+    employees = models.execute_kw(
+        db, uid, password,
+        'hr.employee', 'search_read',
+        [[]],  # Empty list for search domain to get all records
+        {'fields': ['id', 'name']}  # Fields you want to fetch, such as 'id' and 'name'
+    )
 
     for employee in employees:
         print(f"Employee ID: {employee['id']}, Name: {employee['name']}")
@@ -97,7 +98,9 @@ def upsert_firebase_token(partner_id, firebase_token, device_os):
 partner_id = 12  # Replace with the actual partner ID
 firebase_token = 'ambatam'  # Replace with the actual Firebase token
 device_os = 'Sionooo'  # Example device OS
-#upsert_firebase_token(partner_id, firebase_token, device_os)message_details = {
+upsert_firebase_token(partner_id, firebase_token, device_os)
+
+message_details = {
     'body': "Hello, this is a test message.",
     'subject': "Message Subject",
     'message_type': "comment",  # or "notification", depending on your need

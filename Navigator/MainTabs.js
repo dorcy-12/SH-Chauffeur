@@ -2,6 +2,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import HomeScreen from "../screens/home";
 import ProfileScreen from "../screens/profile";
 import DocumentsScreen from "../screens/documents";
+import ChatScreen from "../screens/ChatScreen";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
 const Tab = createBottomTabNavigator();
@@ -80,7 +81,28 @@ function MainTabs() {
           },
         }}
       />
-      {/* Add more Tab.Screen components as needed */}
+
+      <Tab.Screen
+        name="Chat"
+        component={ChatScreen}
+        options={{
+          headerShown: false,
+          tabBarLabel: "Chat",
+          tabBarIcon: ({ focused, color, size }) => {
+            // Reduce the size of the icons
+            const iconSize = size * 0.8; // Adjust the factor to make icons smaller
+            // Return the icon component
+            return (
+              <Ionicons
+                name="chatbubbles"
+                color={color}
+                size={focused ? size : iconSize}
+                focused
+              />
+            );
+          },
+        }}
+      />
     </Tab.Navigator>
   );
 }
