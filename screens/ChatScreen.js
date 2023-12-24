@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -8,6 +8,9 @@ import {
   Platform,
   StatusBar,
   Dimensions,
+  ScrollView,
+  TouchableWithoutFeedback,
+  Animated,
 } from "react-native";
 import {
   GiftedChat,
@@ -26,6 +29,17 @@ const ChatScreen = () => {
   const channels = ["Channel1", "Channel2", "Channel3"]; // Your channels
   const theme = useTheme();
   const styles = createStyles(theme);
+  const sidebarX = useRef(new Animated.Value(-width * 0.7)).current;
+
+  useEffect(() => {
+    const targetValue = sidebarVisible ? 0 : -width * 0.7;
+    Animated.timing(sidebarX, {
+      toValue: targetValue,
+      duration: 300,
+      useNativeDriver: true, // Changed to true as we're animating transform
+    }).start();
+  }, [sidebarVisible]);
+
   const onSend = (newMessages = []) => {
     setMessages((previousMessages) => ({
       ...previousMessages,
@@ -117,16 +131,19 @@ const ChatScreen = () => {
         style={styles.menuButton}
         onPress={handleMenuButtonPressed}
       >
-        {!sidebarVisible ? (
-          <Ionicons name="menu" size={30} color={theme.secondary} />
-        ) : (
-          <Feather name="x" size={30} color={theme.secondary} />
-        )}
+        <Ionicons name="menu" size={30} color={theme.secondary} />
       </TouchableOpacity>
 
-      {sidebarVisible && (
-        <View style={styles.sidebar}>
-          <Text>Kanälen</Text>
+      <Animated.View
+        style={[
+          styles.sidebar,
+          {
+            transform: [{ translateX: sidebarX }],
+          },
+        ]}
+      >
+        <ScrollView>
+          <Text style={styles.channelHeader}>Kanälen</Text>
           {channels.map((channel, index) => (
             <TouchableOpacity
               key={index}
@@ -135,20 +152,26 @@ const ChatScreen = () => {
               <Text style={styles.channel}>{channel}</Text>
             </TouchableOpacity>
           ))}
-        </View>
-      )}
+        </ScrollView>
+      </Animated.View>
 
-      <View style={[styles.chatContainer]}>
-        <GiftedChat
-          messages={messages[currentChannel] || []}
-          onSend={(newMessages) => onSend(newMessages)}
-          user={{ _id: 2 }}
-          renderSend={renderSend}
-          renderInputToolbar={renderInputToolbar}
-          renderComposer={renderComposer}
-          renderChatFooter={renderChatFooter}
-        />
-      </View>
+      <TouchableWithoutFeedback
+        onPress={() => {
+          setSidebarVisible(false);
+        }}
+      >
+        <View style={[styles.chatContainer]}>
+          <GiftedChat
+            messages={messages[currentChannel] || []}
+            onSend={(newMessages) => onSend(newMessages)}
+            user={{ _id: 2 }}
+            renderSend={renderSend}
+            renderInputToolbar={renderInputToolbar}
+            renderComposer={renderComposer}
+            renderChatFooter={renderChatFooter}
+          />
+        </View>
+      </TouchableWithoutFeedback>
     </SafeAreaView>
   );
 };
@@ -161,21 +184,27 @@ const createStyles = (theme) =>
     },
     menuButton: {
       position: "absolute",
-      top: height * 0.05,
+      top: height * 0.06,
       left: width * 0.05,
-      zIndex: 1000,
+      zIndex: 2,
     },
     sidebar: {
-      position: "absolute", // Use absolute positioning
+      position: "absolute",
       left: 0,
       top: height * 0.05,
-      height: "100%", // Set height to cover the screen
-      width: "70%", // Adjust width as needed
-      backgroundColor: "#fff",
+      height: "100%",
+      width: "70%",
+      backgroundColor: theme.primaryText,
       padding: 20,
       borderRightWidth: 1,
       borderRightColor: "#ddd",
-      zIndex: 4, // Ensure sidebar is above chatContainer but below menuButton
+      borderTopRightRadius: 20,
+      zIndex: 4,
+    },
+    channelHeader: {
+      fontSize: 25,
+      fontWeight: "600",
+      marginTop: 20,
     },
     channel: {
       padding: 15,
