@@ -43,14 +43,15 @@ const ChatScreen = () => {
 
   const renderSend = (props) => {
     return (
-      <Send {...props}
-      containerStyle={{
-        paddingVertical: 0, // Adjust vertical padding here
-        paddingHorizontal: 0, // Adjust horizontal padding here
-        marginBottom: 0,
-        marginHorizontal:0,
-        justifyContent:'center'
-      }}
+      <Send
+        {...props}
+        containerStyle={{
+          paddingVertical: 0, // Adjust vertical padding here
+          paddingHorizontal: 0, // Adjust horizontal padding here
+          marginBottom: 0,
+          marginHorizontal: 0,
+          justifyContent: "center",
+        }}
       >
         <View style={{}}>
           <Ionicons name="send" size={24} color={theme.secondary} />
@@ -64,42 +65,46 @@ const ChatScreen = () => {
       <InputToolbar
         {...props}
         containerStyle={{
-         
-          borderTopColor: '#E8E8E8',
-          borderRadius:20,
-          backgroundColor: 'white',
+          borderTopColor: "#E8E8E8",
+          borderRadius: 20,
+          backgroundColor: "white",
           paddingVertical: 10, // Adjust vertical padding here
           paddingHorizontal: 10, // Adjust horizontal padding here
           marginBottom: 20,
-          marginTop:18,
-          marginHorizontal:30,
-        
+          marginTop: 18,
+          marginHorizontal: 30,
         }}
-        primaryStyle={{ alignItems: 'center', justifyContent: 'center' }}
+        primaryStyle={{ alignItems: "center", justifyContent: "center" }}
       />
     );
   };
-  
+
   const renderComposer = (props) => {
     return (
       <Composer
         {...props}
         textInputStyle={{
-
-          borderColor: '#E8E8E8',
+          borderColor: "#E8E8E8",
           borderRadius: 20,
           paddingTop: 0,
           paddingHorizontal: 12,
           marginLeft: 0,
           paddingBottom: 0, // Adjust bottom padding here
-          alignContent:'center',
-          marginBottom:0,
-          maxHeight:80
+          alignContent: "center",
+          marginBottom: 0,
+          maxHeight: 200,
+        }}
+        textInputProps={{
+          maxLength: 200, // Set your desired character limit here
         }}
       />
     );
   };
-  
+
+  const renderChatFooter = () => {
+    // Render a custom footer to create space, if needed
+    return <View style={{ height: height * 0.07 }} />;
+  };
 
   const handleMenuButtonPressed = () => {
     console.log("pressed");
@@ -141,7 +146,7 @@ const ChatScreen = () => {
           renderSend={renderSend}
           renderInputToolbar={renderInputToolbar}
           renderComposer={renderComposer}
-          bottomOffset={0}
+          renderChatFooter={renderChatFooter}
         />
       </View>
     </SafeAreaView>
@@ -179,10 +184,7 @@ const createStyles = (theme) =>
       fontSize: 16,
     },
     chatContainer: {
-        flex: 1,
-        paddingBottom: 30
-      //marginLeft: 0, // Adjust if sidebar is visible
-      //zIndex: 1,
+      flex: 1,
     },
 
     // Additional styles...
