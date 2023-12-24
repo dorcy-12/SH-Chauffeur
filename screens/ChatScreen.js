@@ -149,7 +149,15 @@ const ChatScreen = () => {
               key={index}
               onPress={() => selectChannel(channel)}
             >
-              <Text style={styles.channel}>{channel}</Text>
+              <Text
+                style={
+                  channel === currentChannel
+                    ? styles.highlightedChannel
+                    : styles.channel
+                }
+              >
+                {channel}
+              </Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -206,14 +214,23 @@ const createStyles = (theme) =>
       fontWeight: "600",
       marginTop: 20,
     },
+    chatContainer: {
+      flex: 1,
+    },
     channel: {
       padding: 15,
       borderBottomWidth: 1,
       borderBottomColor: "#eee",
       fontSize: 16,
     },
-    chatContainer: {
-      flex: 1,
+    highlightedChannel: {
+      padding: 15,
+      borderBottomWidth: 1,
+      borderBottomColor: "#eee",
+      fontSize: 16,
+      backgroundColor: theme.primary, 
+      color: theme.primaryText,
+      borderBottomRightRadius:20
     },
 
     // Additional styles...
