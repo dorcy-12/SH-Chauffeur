@@ -391,3 +391,36 @@ export async function deleteUserFirebaseTokens(userId) {
     throw error;
   }
 }
+export async function getDiscussChannels(userId, partnerId) {
+  const url = `${BASE_URL}/jsonrpc`;
+  const pin = await SecureStore.getItemAsync("password");
+
+  const payload = {
+    jsonrpc: "2.0",
+    method: "call",
+    params: {
+      service: "object",
+      method: "execute_kw",
+      args: [
+        DB_NAME,
+        userId,
+        pin,
+        "mail.channel",
+        "search_read",
+        [[['channel_partner_ids', 'in', partnerId ]]], // Your domain, an empty list means all records
+        { fields: ["name", "description", "channel_type"] }, // Specify the fields you want to retrieve
+      ],
+    },
+    id: Math.floor(Math.random() * 100) + 1,
+  };
+
+  try {
+    const response = await axios.post(url, payload);
+    const result = response.data.result;
+    console.log("Channels successfully retrieved");
+    return result; // Returns the ID of the created record
+  } catch (error) {
+    console.error("Error in retrieving channels", error);
+    throw error;
+  }
+}
