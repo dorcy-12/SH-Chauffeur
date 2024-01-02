@@ -1,11 +1,12 @@
 import React, {useContext,useState, useEffect} from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
-import Footer from '../Components/footer';
+
 import { logoutUser} from '../service/authservice';
 import { AuthContext } from '../context/UserAuth';
-import { fetchEmployeeProfile } from "../service/authservice";
+import { fetchEmployeeProfile,deleteUserFirebaseTokens } from "../service/authservice";
 import * as SecureStore from "expo-secure-store";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const ProfileScreen = ({ navigation }) => {
     const theme = useTheme();
@@ -13,8 +14,10 @@ const ProfileScreen = ({ navigation }) => {
     const { setIsUserLoggedIn, userId, password, setUserId,setEmployeeId, setPassword } = useContext(AuthContext);
 
     const handleLogout = async () => {
+      await deleteUserFirebaseTokens("userId");
       await SecureStore.deleteItemAsync("userId");
       await SecureStore.deleteItemAsync("employeeProfile");
+      await AsyncStorage.removeItem("token");
       setUserId(null);
       setEmployeeId(null), 
       setPassword(null),

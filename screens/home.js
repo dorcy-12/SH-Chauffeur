@@ -47,22 +47,6 @@ function HomeScreen({ navigation }) {
     );
   }, []);
 
-  const notifythis = () => {
-    PushNotification.localNotification({
-      channelId: "timer-channel",
-      id: 1,
-      message: `Timer läuft`,
-      playSound: true,
-      soundName: "default",
-      ongoing: true,
-      // Other notification options...
-    });
-  };
-
-  const notnotifythis = () => {
-    PushNotification.cancelLocalNotification({id: 1});
-  };
-
   const loadServices = async () => {
     setIsLoading(true);
     try {
@@ -141,21 +125,6 @@ function HomeScreen({ navigation }) {
           />
         </>
       )}
-      <TouchableOpacity
-        onPress={() => {
-          notifythis();
-        }}
-      >
-       <Text>i am here to notify</Text> 
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={() => {
-          notnotifythis();
-        }}
-      >
-       <Text>i am not here to notify</Text> 
-      </TouchableOpacity>
     </SafeAreaView>
   );
 }

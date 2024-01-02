@@ -15,11 +15,13 @@ function RootNavigator() {
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {isUserLoggedIn ? (
+  
+      {!isUserLoggedIn ? (
         <Stack.Screen name="home" component={StackNavigator} />
       ) : (
         <Stack.Screen name="Auth" component={AuthNavigator} />
       )}
+      
     </Stack.Navigator>
   );
 }
