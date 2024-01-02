@@ -132,6 +132,7 @@ const ChatScreen = () => {
         onPress={handleMenuButtonPressed}
       >
         <Ionicons name="menu" size={30} color={theme.secondary} />
+        <Text style={styles.currentChannel}>{currentChannel}</Text>
       </TouchableOpacity>
 
       <Animated.View
@@ -190,11 +191,20 @@ const createStyles = (theme) =>
       flex: 1,
       paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
     },
+    
     menuButton: {
       position: "absolute",
       top: height * 0.06,
       left: width * 0.05,
+      flexDirection:"row",
+      alignItems:"center",
       zIndex: 2,
+    },
+    currentChannel:{
+      marginLeft:20,
+      fontSize:18,
+      fontWeight:"600",
+      color:theme.text
     },
     sidebar: {
       position: "absolute",
