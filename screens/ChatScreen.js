@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import {
   View,
   Text,
@@ -20,16 +20,18 @@ import {
 } from "react-native-gifted-chat";
 import { Ionicons, Feather } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
+import { AuthContext } from "../context/UserAuth";
+import { getDiscussChannels } from "../service/authservice";
 
 const { width, height } = Dimensions.get("window");
 const ChatScreen = () => {
-  const [currentChannel, setCurrentChannel] = useState("Channel1");
+  const [currentChannel, setCurrentChannel] = useState("general");
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [messages, setMessages] = useState({}); // Store messages per channel
-  const channels = ["Channel1", "Channel2", "Channel3"]; // Your channels
   const theme = useTheme();
   const styles = createStyles(theme);
   const sidebarX = useRef(new Animated.Value(-width * 0.7)).current;
+  const { channels } = useContext(AuthContext);
 
   useEffect(() => {
     const targetValue = sidebarVisible ? 0 : -width * 0.7;
@@ -39,6 +41,8 @@ const ChatScreen = () => {
       useNativeDriver: true, // Changed to true as we're animating transform
     }).start();
   }, [sidebarVisible]);
+
+  
 
   const onSend = (newMessages = []) => {
     setMessages((previousMessages) => ({
@@ -51,8 +55,9 @@ const ChatScreen = () => {
   };
 
   const selectChannel = (channel) => {
-    setCurrentChannel(channel);
+    setCurrentChannel(channel.name);
     setSidebarVisible(false);
+    console.log(channels);
   };
 
   const renderSend = (props) => {
@@ -152,12 +157,12 @@ const ChatScreen = () => {
             >
               <Text
                 style={
-                  channel === currentChannel
+                  channel.name === currentChannel
                     ? styles.highlightedChannel
                     : styles.channel
                 }
               >
-                {channel}
+                {channel.name}
               </Text>
             </TouchableOpacity>
           ))}
@@ -191,20 +196,20 @@ const createStyles = (theme) =>
       flex: 1,
       paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
     },
-    
+
     menuButton: {
       position: "absolute",
       top: height * 0.06,
       left: width * 0.05,
-      flexDirection:"row",
-      alignItems:"center",
+      flexDirection: "row",
+      alignItems: "center",
       zIndex: 2,
     },
-    currentChannel:{
-      marginLeft:20,
-      fontSize:18,
-      fontWeight:"600",
-      color:theme.text
+    currentChannel: {
+      marginLeft: 20,
+      fontSize: 18,
+      fontWeight: "600",
+      color: theme.text,
     },
     sidebar: {
       position: "absolute",
@@ -238,9 +243,9 @@ const createStyles = (theme) =>
       borderBottomWidth: 1,
       borderBottomColor: "#eee",
       fontSize: 16,
-      backgroundColor: theme.primary, 
+      backgroundColor: theme.primary,
       color: theme.primaryText,
-      borderBottomRightRadius:20
+      borderBottomRightRadius: 20,
     },
 
     // Additional styles...
