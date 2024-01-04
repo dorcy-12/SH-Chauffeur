@@ -22,7 +22,6 @@ const DocumentsScreen = () => {
     setIsUserLoggedIn,
     userId,
     password,
-    setEmployeeId,
     shouldReloadServices,
     setShouldReloadServices,
   } = useContext(AuthContext);
