@@ -1,7 +1,7 @@
 import xmlrpc.client
+import base64
 from datetime import datetime
-dorcy, dorcypw = "h.dorcy@sh-personal.com", "amatama"
-admin, adminpw = "default@localhost.localdomain", "9N*Aj8#tW9"
+
 
 #context = ssl.create_default_context(cafile=certifi.where())
 #info = xmlrpc.client.ServerProxy('https://demo.odoo.com/start', context = context).start()
@@ -41,16 +41,7 @@ def get_all_employees():
 
 #get_all_employees()
 
-if uid:
-    user_data = models.execute_kw(db, uid, password, 'res.users', 'read', [uid], {'fields': ['partner_id']})
-    
-    if user_data and user_data[0]:
-        partner_id = user_data[0]['partner_id'][0]  # The first element is the ID
-        print("Your partner ID is:", partner_id)
-    else:
-        print("User data not found.")
-else:
-    print("Authentication failed.")
+
 
 def check_in():
 
@@ -98,7 +89,7 @@ def upsert_firebase_token(partner_id, firebase_token, device_os):
 partner_id = 12  # Replace with the actual partner ID
 firebase_token = 'ambatam'  # Replace with the actual Firebase token
 device_os = 'Sionooo'  # Example device OS
-upsert_firebase_token(partner_id, firebase_token, device_os)
+#upsert_firebase_token(partner_id, firebase_token, device_os)
 
 message_details = {
     'body': "Hello, this is a test message.",
@@ -126,7 +117,7 @@ def sendMessage():
     print(f"Message sent successfully with ID: {message_id}")
 
 
-sendMessage()
+
 
 def getpartners():
     responses = models.execute_kw(
@@ -141,8 +132,81 @@ def getpartners():
 def getchannels():
     responses = models.execute_kw(db, uid, password,
                                  'mail.channel', 'search_read',
-                                 [[]],
-                                 { 'fields': ['id','name', 'description', 'channel_type', 'public']})
+                                 [[['channel_partner_ids', 'in', 3]]],
+                                 { 'fields': ['name', 'description', 'channel_type', 'public']})
     for response in responses:
         print(response)
-#getchannels()
+getchannels()
+
+def sendMessage(msg, id):
+    response = models.execute_kw(db, uid, password,
+                'mail.channel', 'message_post',
+                [id],  # list of one ID
+                {'body': msg, 'message_type': 'comment', 'subtype_xmlid': 'mail.mt_comment'})
+    print(f"Message sent to channel ID {id} with responose {response}")
+
+#sendMessage("hi bro are you doing well?", 5)
+
+def getMessages(id):
+    messages =  models.execute_kw(db, uid, password,
+                'mail.message', 'search_read',
+                [[('res_id', '=', id), ('model', '=', 'mail.channel')]],  # Filter for the specific channel
+                {'fields': ['body', 'date', 'author_id', 'attachment_ids'],'limit': 10})  # Fields you want to retrieve
+
+    # Print the retrieved messages
+    print(messages)
+
+#cleagetMessages(5)
+
+def downloadAttachment(attachment_id):
+    attachment = models.execute_kw(db, uid, password,
+                'ir.attachment', 'read',
+                [attachment_id], {'fields': ['name', 'datas', 'mimetype']})
+    print(attachment)
+
+    #Check if attachment is found and has data
+    if attachment and attachment[0].get('datas'):
+        # Decode the base64 encoded data
+        data = base64.b64decode(attachment[0]['datas'])
+
+        # Write to a file
+        with open(attachment[0]['name'], 'wb') as file:
+            file.write(data)
+
+        print(f"Attachment {attachment[0]['name']} downloaded successfully.")
+    else:
+        print("Attachment not found or no data available.")
+
+#downloadAttachment(749)
+
+def sendAttachment(channel_id):
+    try:
+        with open("./assets/test.png", 'rb') as file:
+            file_content = base64.b64encode(file.read())
+    except:
+        print("error")
+
+    
+    # Create an attachment
+    attachment_id = models.execute_kw(db, uid, password,
+        'ir.attachment', 'create',
+        [{'name': 'Attachment Name',  # Give a suitable name
+        'datas': file_content.decode(),  # Encoded file content
+        'res_model': 'mail.channel',
+        'res_id': channel_id}])
+    
+    
+
+    #Send a message with the attachment
+    message = "Your message with attachment"  # Your message text
+    models.execute_kw(db, uid, password,
+        'mail.channel', 'message_post',
+        [channel_id],
+        {'body': message,
+        'message_type': 'comment',
+        'subtype_xmlid': 'mail.mt_comment',
+        'attachment_ids': [767]})  # Linking the attachment """
+
+    print(f"Message sent with attachment ID {767}")
+
+#sendAttachment(5)
