@@ -7,6 +7,7 @@ import {
   Image,
   StyleSheet,
   SafeAreaView,
+  Alert,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import {
@@ -15,108 +16,114 @@ import {
   fetchEmployeeProfile,
   uploadFirebaseToken,
   fetchPartnerId,
+  getDiscussChannels,
 } from "../service/authservice";
-import * as SecureStore from "expo-secure-store";
 import { AuthContext } from "../context/UserAuth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { NavigationHelpersContext } from "@react-navigation/native";
-
+import LottieView from "lottie-react-native";
 function LoginScreen({ navigation }) {
   const [Id, setId] = useState("");
   const [pin, setPin] = useState("");
   const [isPinVisible, setIsPinVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const {
     setIsUserLoggedIn,
     setUserId,
-    userId,
-    employeeId,
-    setEmployeeId,
-    password,
+    setEmployeeProfile,
     setPassword,
+    setChannels,
+    channels,
+    setPartnerId,
   } = useContext(AuthContext);
 
   const handleLogin = async () => {
-    /*
     try {
-      const fcmtoken = await AsyncStorage.getItem("token");
+      setIsLoading(true);
+      //const fcmtoken = await AsyncStorage.getItem("token");
       const uid = await loginUser(Id, pin);
       if (uid) {
         const employeeProfile = await fetchEmployeeProfile(uid, pin);
         setUserId(uid);
-        setEmployeeId(employeeProfile.id);
+        setEmployeeProfile(employeeProfile);
         setPassword(pin);
 
-        if (employeeProfile && userId && password) {
-          console.log("User ID:", userId);
-          setIsUserLoggedIn(true);
-          console.log("Logged in successfully");
-
-          // Fetch the res.partner_id
+        if (employeeProfile) {
           const partnerId = await fetchPartnerId(uid, pin);
+          setPartnerId(partnerId);
           if (partnerId) {
             console.log("Partner ID:", partnerId);
-            const uploadResult = await uploadFirebaseToken(
-              partnerId,
-              fcmtoken,
-              uid,
-              pin
-            );
-            console.log("Firebase token uploaded. Record ID:", uploadResult);
+            //const uploadResult = await uploadFirebaseToken(partnerId,fcmtoken,uid,pin);
+            //console.log("Firebase token uploaded. Record ID:", uploadResult);
+            const remoteChannels = await getDiscussChannels(uid, partnerId);
+            if (remoteChannels) {
+              setChannels(remoteChannels);
+              setIsUserLoggedIn(true);
+            } else {
+              Alert.alert("Error", "Failed to retrieve channels");
+            }
           } else {
-            console.log("Failed to retrieve partner ID");
+            Alert.alert("Failed to retrieve partner ID");
           }
         } else {
-          console.log("Employee profile not found");
+          Alert.alert("Employee profile not found");
         }
       } else {
-        console.log("Authentication failed");
+        Alert.alert("Authentication failed");
       }
     } catch (error) {
-      console.error("Login error", error);
+      Alert.alert("Login error", error);
     }
-    */
+    setIsLoading(false);
   };
-
-  useEffect(() => {
-    console.log("Password updated in context:", password);
-  }, [password]);
-
-  useEffect(() => {
-    console.log("userId updated in context:", userId);
-  }, [userId]);
 
   return (
     <SafeAreaView style={styles.container}>
-      <Image source={require("../assets/logo-no.png")} style={styles.logo} />
-      <View style={styles.form}>
-        <View style={styles.inputContainer}>
-          <TextInput
-            placeholder="Fahrer-Nr"
-            value={Id}
-            onChangeText={setId}
-            style={styles.input}
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <LottieView
+            source={require("../assets/loading.json")}
+            autoPlay
+            loop
+            style={styles.lottieAnimation}
           />
         </View>
+      ) : (
+        <>
+          <Image
+            source={require("../assets/logo-no.png")}
+            style={styles.logo}
+          />
+          <View style={styles.form}>
+            <View style={styles.inputContainer}>
+              <TextInput
+                placeholder="Fahrer-Nr"
+                value={Id}
+                onChangeText={setId}
+                style={styles.input}
+              />
+            </View>
 
-        <View style={styles.inputContainer}>
-          <TextInput
-            placeholder="PIN"
-            value={pin}
-            onChangeText={setPin}
-            secureTextEntry={!isPinVisible}
-            style={styles.input}
-          />
-          <TouchableOpacity
-            style={styles.pinToggle}
-            onPress={() => setIsPinVisible(!isPinVisible)}
-          >
-            <Feather name={isPinVisible ? "eye-off" : "eye"} size={24} />
-          </TouchableOpacity>
-        </View>
-        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-          <Text style={styles.buttonText}>Login</Text>
-        </TouchableOpacity>
-      </View>
+            <View style={styles.inputContainer}>
+              <TextInput
+                placeholder="PIN"
+                value={pin}
+                onChangeText={setPin}
+                secureTextEntry={!isPinVisible}
+                style={styles.input}
+              />
+              <TouchableOpacity
+                style={styles.pinToggle}
+                onPress={() => setIsPinVisible(!isPinVisible)}
+              >
+                <Feather name={isPinVisible ? "eye-off" : "eye"} size={24} />
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+              <Text style={styles.buttonText}>Login</Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
     </SafeAreaView>
   );
 }
@@ -169,6 +176,15 @@ const styles = StyleSheet.create({
   buttonText: {
     color: "white",
     fontSize: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  lottieAnimation: {
+    width: 200, // Set the size as needed
+    height: 200, // Set the size as needed
   },
 });
 

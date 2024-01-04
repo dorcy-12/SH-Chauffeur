@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 import { parseString } from "react-native-xml2js";
@@ -62,9 +63,9 @@ export async function fetchEmployeeProfile(userId, password) {
     console.log(employeeData);
 
     if (employeeData && employeeData.length > 0) {
-      const { id, name, image_1920, work_email } = employeeData[0];
-      await SecureStore.setItemAsync("employeeId", id.toString());
-      return { id, name, profilePicture: image_1920, work_email };
+      const employeeProfileString = JSON.stringify(employeeData[0]);
+      await SecureStore.setItemAsync("employeeProfile", employeeProfileString);
+      return employeeData[0];
     }
     return null;
   } catch (error) {
@@ -407,8 +408,8 @@ export async function getDiscussChannels(userId, partnerId) {
         pin,
         "mail.channel",
         "search_read",
-        [[['channel_partner_ids', 'in', partnerId ]]], // Your domain, an empty list means all records
-        { fields: ["name", "description", "channel_type"] }, // Specify the fields you want to retrieve
+        [[["channel_partner_ids", "in", partnerId]]], // Your domain, an empty list means all records
+        { fields: ["id", "name", "description"] }, // Specify the fields you want to retrieve
       ],
     },
     id: Math.floor(Math.random() * 100) + 1,
@@ -417,10 +418,164 @@ export async function getDiscussChannels(userId, partnerId) {
   try {
     const response = await axios.post(url, payload);
     const result = response.data.result;
-    console.log("Channels successfully retrieved");
+    console.log("Channels successfully retrieved", result);
+    await AsyncStorage.setItem("channels", JSON.stringify(result));
     return result; // Returns the ID of the created record
   } catch (error) {
     console.error("Error in retrieving channels", error);
+    throw error;
+  }
+}
+export async function sendMessage(userId, channel_id, msg, attachment_id) {
+  const url = `${BASE_URL}/jsonrpc`;
+  const pin = await SecureStore.getItemAsync("password");
+
+  const payload = {
+    jsonrpc: "2.0",
+    method: "call",
+    params: {
+      service: "object",
+      method: "execute_kw",
+      args: [
+        DB_NAME,
+        userId,
+        pin,
+        "mail.channel",
+        "message_post",
+        [channel_id],
+        {
+          body: msg,
+          message_type: "comment",
+          subtype_xmlid: "mail.mt_comment",
+          attachment_ids: attachment_id,
+        },
+      ],
+    },
+    id: Math.floor(Math.random() * 100) + 3,
+  };
+
+  try {
+    const response = await axios.post(url, payload);
+    const result = response.data.result;
+    console.log("Message successfully sent");
+    return result; // Returns the ID of the created record
+  } catch (error) {
+    console.error("Error in sending message", error);
+    throw error;
+  }
+}
+export async function getMessages(userId, channel_id, limit) {
+  const url = `${BASE_URL}/jsonrpc`;
+  const pin = await SecureStore.getItemAsync("password");
+
+  const payload = {
+    jsonrpc: "2.0",
+    method: "call",
+    params: {
+      service: "object",
+      method: "execute_kw",
+      args: [
+        DB_NAME,
+        userId,
+        pin,
+        "mail.message",
+        "search_read",
+        [[("res_id", "=", channel_id), ("model", "=", "mail.channel")]],
+        {
+          fields: ["body", "date", "author_id", "attachment_ids"],
+          limit: limit,
+        },
+      ],
+    },
+    id: Math.floor(Math.random() * 100) + 1,
+  };
+
+  try {
+    const response = await axios.post(url, payload);
+    const result = response.data.result;
+    console.log("Messages successfully retrieved");
+    return result; // Returns the ID of the created record
+  } catch (error) {
+    console.error("Error in retrieving messages", error);
+    throw error;
+  }
+}
+
+export async function downloadAttachment(userId, attachmentId) {
+  const url = `${BASE_URL}/jsonrpc`;
+  const pin = await SecureStore.getItemAsync("password");
+  const payload = {
+    jsonrpc: "2.0",
+    method: "call",
+    params: {
+      service: "object",
+      method: "execute_kw",
+      args: [
+        DB_NAME,
+        userId, // User ID obtained after authentication
+        pin,
+        "ir.attachment",
+        "read",
+        [attachmentId],
+        { fields: ["name", "datas", "mimetype"] },
+      ],
+    },
+    id: Math.floor(Math.random() * 100) + 2,
+  };
+
+  try {
+    const response = await axios.post(url, payload);
+
+    const attachmentData = response.data.result && response.data.result[0];
+    if (attachmentData && attachmentData.datas) {
+      // Decode the base64 data
+      const decodedData = Buffer.from(attachmentData.datas, "base64");
+      // Handle the decoded data (e.g., save to file, display, etc.)
+      return decodedData;
+    } else {
+      console.log("No data available for the attachment.");
+    }
+  } catch (error) {
+    console.error("Error fetching attachment:", error);
+  }
+}
+export async function uploadAttachment(
+  channelId,
+  encodedFileContent,
+  fileName
+) {
+  const payload = {
+    jsonrpc: "2.0",
+    method: "call",
+    params: {
+      service: "object",
+      method: "execute_kw",
+      args: [
+        DB_NAME,
+        uid,
+        password,
+        "ir.attachment",
+        "create",
+        [
+          {
+            name: fileName, // File name
+            datas: encodedFileContent, // Base64 encoded content
+            res_model: "mail.channel",
+            res_id: channelId,
+          },
+        ],
+      ],
+    },
+    id: Math.floor(Math.random() * 100) + 4,
+  };
+
+  try {
+    const response = await axios.post(url, payload);
+    const result = response.data.result;
+    console.log("Attachment successfully uploaded");
+    return result; // Returns the ID of the created record
+  } catch (error) {
+    console.error("Error in uploading attachment", error);
     throw error;
   }
 }

@@ -8,8 +8,9 @@ import {createEmployeeCheckIn, changeServiceState} from "../service/authservice"
 const ServiceDetailCard = ({ service }) => {
   const navigation = useNavigation();
   const theme = useTheme();
-  const { userId, employeeId, password } = useContext(AuthContext);
+  const { userId, employeeProfile, password } = useContext(AuthContext);
   const styles = createStyles(theme);
+  const employeeId = employeeProfile.id;
 
   if (!service) return null;
   console.log(service);
