@@ -26,7 +26,7 @@ function HomeScreen({ navigation }) {
   const [services, setServices] = useState([]);
   const { activeService, setActiveService } = useService();
   const [refreshing, setRefreshing] = useState(false); // Add this line
-  const { setIsUserLoggedIn, userId, password, setEmployeeId } =
+  const { setIsUserLoggedIn, userId, password } =
     useContext(AuthContext);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -56,12 +56,10 @@ function HomeScreen({ navigation }) {
         "todo",
         password
       );
-      const employeeid = await SecureStore.getItemAsync("employeeId");
+
       console.log("the suer" + userId);
       setServices(fetchedServices);
-      setEmployeeId(employeeid);
       console.log(fetchedServices);
-      console.log(employeeid);
     } catch (error) {
       console.error("Error loading services:", error);
     } finally {

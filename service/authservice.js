@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 import { parseString } from "react-native-xml2js";
@@ -62,9 +63,9 @@ export async function fetchEmployeeProfile(userId, password) {
     console.log(employeeData);
 
     if (employeeData && employeeData.length > 0) {
-      const { id, name, image_1920, work_email } = employeeData[0];
-      await SecureStore.setItemAsync("employeeId", id.toString());
-      return { id, name, profilePicture: image_1920, work_email };
+      const employeeProfileString = JSON.stringify(employeeData[0]);
+      await SecureStore.setItemAsync("employeeProfile", employeeProfileString);
+      return employeeData[0];
     }
     return null;
   } catch (error) {
@@ -408,7 +409,7 @@ export async function getDiscussChannels(userId, partnerId) {
         "mail.channel",
         "search_read",
         [[["channel_partner_ids", "in", partnerId]]], // Your domain, an empty list means all records
-        { fields: ["name", "description", "channel_type"] }, // Specify the fields you want to retrieve
+        { fields: ["id", "name", "description"] }, // Specify the fields you want to retrieve
       ],
     },
     id: Math.floor(Math.random() * 100) + 1,
@@ -417,7 +418,8 @@ export async function getDiscussChannels(userId, partnerId) {
   try {
     const response = await axios.post(url, payload);
     const result = response.data.result;
-    console.log("Channels successfully retrieved");
+    console.log("Channels successfully retrieved", result);
+    await AsyncStorage.setItem("channels", JSON.stringify(result));
     return result; // Returns the ID of the created record
   } catch (error) {
     console.error("Error in retrieving channels", error);
@@ -445,7 +447,7 @@ export async function sendMessage(userId, channel_id, msg, attachment_id) {
           body: msg,
           message_type: "comment",
           subtype_xmlid: "mail.mt_comment",
-          attachment_ids: attachment_id
+          attachment_ids: attachment_id,
         },
       ],
     },
