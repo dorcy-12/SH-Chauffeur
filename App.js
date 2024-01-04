@@ -1,6 +1,6 @@
 import React, { useState, useEffect, createContext } from "react";
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View, Alert} from "react-native";
+import { StyleSheet, Text, View, Alert } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import RootNavigator from "./Navigator/RootNavigator";
 import { ThemeProvider } from "./context/ThemeContext";
@@ -16,6 +16,7 @@ import {
   NotificationListener,
 } from "./src/Utils/pushnotifications";
 import messaging from "@react-native-firebase/messaging";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 PushNotification.configure({
   onRegister: function (token) {
@@ -57,20 +58,25 @@ PushNotification.configure({
 export default function App() {
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(null);
   const [userId, setUserId] = useState(null);
-  const [employeeId, setEmployeeId] = useState(null);
+  const [partnerId, setPartnerId] = useState(null);
+  const [employeeProfile, setEmployeeProfile] = useState(null);
   const [password, setPassword] = useState(null);
   const [shouldReloadServices, setShouldReloadServices] = useState(false);
+  const [channels, setChannels] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkToken = async () => {
       const uid = await SecureStore.getItemAsync("userId");
       const password = await SecureStore.getItemAsync("password");
-      if (uid && password) {
-        setIsLoading(true);
+      const employeeProfile = await SecureStore.getItemAsync("employeeProfile");
+      const remoteChannels = await AsyncStorage.getItem("channels");
+      if (uid && password && employeeProfile) {
         setIsUserLoggedIn(true);
         setUserId(uid); // Assuming token is the userId
         setPassword(password);
+        setEmployeeProfile(JSON.parse(employeeProfile));
+        setChannels(JSON.parse(remoteChannels));
       }
 
       setIsLoading(false); // Update loading state after check
@@ -96,12 +102,16 @@ export default function App() {
         setIsUserLoggedIn,
         userId,
         setUserId,
-        employeeId,
-        setEmployeeId,
+        partnerId,
+        setPartnerId,
+        employeeProfile,
+        setEmployeeProfile,
         password,
         setPassword,
         shouldReloadServices,
         setShouldReloadServices,
+        channels,
+        setChannels,
       }}
     >
       <ThemeProvider>
