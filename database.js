@@ -2,8 +2,27 @@ import * as SQLite from "expo-sqlite";
 
 const db = SQLite.openDatabase("MyDatabase.db");
 
-// Function to create the Users table
-const createUsersTable = () => {
+// Call the function to ensure the table is created
+export const initDB = (callback) => {
+  let tableCount = 4; // Total number of tables to create
+  let createdTables = 0;
+
+  const checkAllTablesCreated = () => {
+    if (createdTables === tableCount) {
+      callback(true);
+    }
+  };
+
+  const tableCreated = () => {
+    createdTables += 1;
+    checkAllTablesCreated();
+  };
+
+  const tableCreationFailed = (error) => {
+    console.error("Error creating table: ", error);
+    callback(false);
+  };
+
   db.transaction((tx) => {
     tx.executeSql(
       "CREATE TABLE IF NOT EXISTS Users (" +
@@ -16,15 +35,16 @@ const createUsersTable = () => {
         ");",
       [],
       () => {
+        tableCreated();
         console.log("Users table created successfully");
       },
       (_, error) => {
+        tableCreationFailed(error);
         console.log("Error creating Users table: " + error);
       }
     );
   });
-};
-const createChannelsTable = () => {
+
   db.transaction((tx) => {
     tx.executeSql(
       "CREATE TABLE IF NOT EXISTS Channels (" +
@@ -35,15 +55,16 @@ const createChannelsTable = () => {
         ");",
       [],
       () => {
+        tableCreated();
         console.log("Channels table created successfully");
       },
       (_, error) => {
+        tableCreationFailed(error);
         console.log("Error creating Channels table: " + error);
       }
     );
   });
-};
-const createMessagesTable = () => {
+
   db.transaction((tx) => {
     tx.executeSql(
       "CREATE TABLE IF NOT EXISTS Messages (" +
@@ -59,15 +80,16 @@ const createMessagesTable = () => {
         ");",
       [],
       () => {
+        tableCreated();
         console.log("Messages table created successfully");
       },
       (_, error) => {
+        tableCreationFailed(error);
         console.log("Error creating Messages table: " + error);
       }
     );
   });
-};
-const createAttachmentsTable = () => {
+
   db.transaction((tx) => {
     tx.executeSql(
       "CREATE TABLE IF NOT EXISTS Attachments (" +
@@ -80,26 +102,19 @@ const createAttachmentsTable = () => {
         ");",
       [],
       () => {
+        tableCreated();
         console.log("Attachments table created successfully");
       },
       (_, error) => {
+        tableCreationFailed(error);
         console.log("Error creating Attachments table: " + error);
       }
     );
   });
 };
 
-// Call the function to ensure the table is created
-const initDB = () => {
-  createUsersTable();
-  createChannelsTable();
-  createMessagesTable();
-  createAttachmentsTable();
-  // Add more initialization if needed
-};
-
 // Call the function to ensure the tables are created
-initDB();
+
 // Insert a user into the Users table
 const insertUser = (
   userId,
@@ -130,7 +145,12 @@ export const getUsers = () => {
     );
   });
 };
-export const insertChannel = (channel_id, odoo_channel_id, name, description) => {
+export const insertChannel = (
+  channel_id,
+  odoo_channel_id,
+  name,
+  description
+) => {
   db.transaction((tx) => {
     tx.executeSql(
       "INSERT INTO Channels (channel_id, odoo_channel_id, name, description) VALUES (?, ?, ?, ?);",
