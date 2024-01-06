@@ -49,7 +49,6 @@ export const initDB = (callback) => {
     tx.executeSql(
       "CREATE TABLE IF NOT EXISTS Channels (" +
         "channel_id INTEGER PRIMARY KEY NOT NULL, " +
-        "odoo_channel_id INTEGER, " +
         "name VARCHAR(50), " +
         "description VARCHAR(255)" +
         ");",
@@ -145,19 +144,16 @@ export const getUsers = () => {
     );
   });
 };
-export const insertChannel = (
-  channel_id,
-  odoo_channel_id,
-  name,
-  description
-) => {
-  db.transaction((tx) => {
-    tx.executeSql(
-      "INSERT INTO Channels (channel_id, odoo_channel_id, name, description) VALUES (?, ?, ?, ?);",
-      [channel_id, odoo_channel_id, name, description],
-      (_, resultSet) => console.log("Channel added successfully", resultSet),
-      (_, error) => console.log("Error adding channel: ", error)
-    );
+export const insertChannel = (channel_id, name, description) => {
+  return new Promise((resolve, reject) => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        "INSERT INTO Channels (channel_id, name, description) VALUES (?, ?, ?, ?);",
+        [channel_id, name, description],
+        (_, resultSet) => console.log("Channel added successfully", resultSet),
+        (_, error) => console.log("Error adding channel: ", error)
+      );
+    });
   });
 };
 
