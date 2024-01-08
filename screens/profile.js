@@ -1,15 +1,20 @@
 import React, { useContext, useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+  Alert,
+} from "react-native";
 import { useTheme } from "../context/ThemeContext";
 
 import { logoutUser } from "../service/authservice";
 import { AuthContext } from "../context/UserAuth";
-import {
-  fetchEmployeeProfile,
-  deleteUserFirebaseTokens,
-} from "../service/authservice";
+import { deleteUserFirebaseTokens } from "../service/authservice";
 import * as SecureStore from "expo-secure-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getUserProfile } from "../database";
 
 const ProfileScreen = ({ navigation }) => {
   const theme = useTheme();
@@ -19,19 +24,21 @@ const ProfileScreen = ({ navigation }) => {
     userId,
     password,
     setUserId,
-    setEmployeeProfile,
-    employeeProfile,
+    setEmployeeId,
+    employeeId,
     setPassword,
   } = useContext(AuthContext);
 
   const handleLogout = async () => {
     await deleteUserFirebaseTokens("userId");
     await SecureStore.deleteItemAsync("userId");
-    await SecureStore.deleteItemAsync("employeeProfile");
+    await SecureStore.deleteItemAsync("employeeId");
     await AsyncStorage.removeItem("token");
     await AsyncStorage.removeItem("channels");
     setUserId(null);
-    setEmployeeProfile(null), setPassword(null), setIsUserLoggedIn(false);
+    setEmployeeId(null);
+    setPassword(null);
+    setIsUserLoggedIn(false);
     // Clear other sensitive data as needed
   };
 
@@ -43,17 +50,27 @@ const ProfileScreen = ({ navigation }) => {
 
   useEffect(() => {
     const fetchAndSetUserProfile = async () => {
-      console.log(userId);
+      try {
+        console.log(userId);
+        const userProfile = await getUserProfile(userId);
 
-      setProfileData({
-        name: employeeProfile.name,
-        imageUri: `data:image/png;base64,${employeeProfile.image_1920}`,
-        email: employeeProfile.work_email,
-      });
+        if (userProfile) {
+          setProfileData({
+            name: userProfile.username,
+            imageUri: `data:image/png;base64,${userProfile.profile_picture}`,
+            email: userProfile.email,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching user profile: ", error);
+        Alert.alert("Error fetching user profile: ", error);
+      }
     };
 
-    fetchAndSetUserProfile();
-  }, []);
+    if (userId) {
+      fetchAndSetUserProfile();
+    }
+  }, [userId]);
 
   return (
     <View style={styles.container}>
