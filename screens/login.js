@@ -21,6 +21,8 @@ import {
 import { AuthContext } from "../context/UserAuth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import LottieView from "lottie-react-native";
+import { insertUser, insertChannel } from "../database";
+
 function LoginScreen({ navigation }) {
   const [Id, setId] = useState("");
   const [pin, setPin] = useState("");
@@ -29,7 +31,7 @@ function LoginScreen({ navigation }) {
   const {
     setIsUserLoggedIn,
     setUserId,
-    setEmployeeProfile,
+    setEmployeeId,
     setPassword,
     setChannels,
     channels,
@@ -39,41 +41,78 @@ function LoginScreen({ navigation }) {
   const handleLogin = async () => {
     try {
       setIsLoading(true);
-      //const fcmtoken = await AsyncStorage.getItem("token");
+      const fcmtoken = await AsyncStorage.getItem("token");
       const uid = await loginUser(Id, pin);
-      if (uid) {
-        const employeeProfile = await fetchEmployeeProfile(uid, pin);
-        setUserId(uid);
-        setEmployeeProfile(employeeProfile);
-        setPassword(pin);
 
-        if (employeeProfile) {
-          const partnerId = await fetchPartnerId(uid, pin);
+      if (uid) {
+        // Execute fetchEmployeeProfile and fetchPartnerId in parallel
+        const employeeProfilePromise = fetchEmployeeProfile(uid, pin);
+        const partnerIdPromise = fetchPartnerId(uid, pin);
+
+        // Await all promises
+        const [{ id, name, image_1920, work_email }, partnerId] =
+          await Promise.all([employeeProfilePromise, partnerIdPromise]);
+
+        if (partnerId) {
+          setUserId(uid);
+          setEmployeeId(id);
+          setPassword(pin);
           setPartnerId(partnerId);
-          if (partnerId) {
-            console.log("Partner ID:", partnerId);
-            //const uploadResult = await uploadFirebaseToken(partnerId,fcmtoken,uid,pin);
-            //console.log("Firebase token uploaded. Record ID:", uploadResult);
-            const remoteChannels = await getDiscussChannels(uid, partnerId);
-            if (remoteChannels) {
-              setChannels(remoteChannels);
-              setIsUserLoggedIn(true);
-            } else {
-              Alert.alert("Error", "Failed to retrieve channels");
+
+          // Further parallel operations
+          const uploadTokenPromise = uploadFirebaseToken(
+            partnerId,
+            fcmtoken,
+            uid,
+            pin
+          );
+          const fetchChannelsPromise = getDiscussChannels(uid, partnerId);
+
+          // Await all promises
+          const [uploadResult, channels] = await Promise.all([
+            uploadTokenPromise,
+            fetchChannelsPromise,
+          ]);
+          console.log("Firebase token uploaded. Record ID:", uploadResult);
+
+          if (channels) {
+            const userInsertPromise = insertUser(
+              uid,
+              id,
+              partnerId,
+              name,
+              work_email,
+              image_1920
+            );
+            const channelInsertPromises = channels.map((channel) =>
+              insertChannel(channel.id, channel.name, channel.description)
+            );
+
+            // Combine all promises
+            const allInsertPromises = [
+              userInsertPromise,
+              ...channelInsertPromises,
+            ];
+
+            // Await all insert operations
+            try {
+              await Promise.all(allInsertPromises);
+            } catch (error) {
+              // Handle any errors that occurred during insert operations
+              console.error("Error during insert operations: ", error);
             }
-          } else {
-            Alert.alert("Failed to retrieve partner ID");
           }
         } else {
-          Alert.alert("Employee profile not found");
+          Alert.alert("Failed to retrieve partner ID");
         }
       } else {
         Alert.alert("Authentication failed");
       }
     } catch (error) {
-      Alert.alert("Login error", error);
+      Alert.alert("Login error", error.message);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   return (
