@@ -115,7 +115,7 @@ export const initDB = (callback) => {
 // Call the function to ensure the tables are created
 
 // Insert a user into the Users table
-const insertUser = (
+export const insertUser = (
   userId,
   employeeId,
   partnerId,
@@ -123,27 +123,57 @@ const insertUser = (
   email,
   profilePicture
 ) => {
-  db.transaction((tx) => {
-    tx.executeSql(
-      "INSERT INTO Users (user_id, employee_id, partner_id, username, email, profile_picture) VALUES (?, ?, ?, ?, ?, ?);",
-      [userId, employeeId, partnerId, username, email, profilePicture],
-      (_, resultSet) => console.log("User added successfully", resultSet),
-      (_, error) => console.log("Error adding user: ", error)
-    );
+  return new Promise((resolve, reject) => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        "INSERT INTO Users (user_id, employee_id, partner_id, username, email, profile_picture) VALUES (?, ?, ?, ?, ?, ?);",
+        [userId, employeeId, partnerId, username, email, profilePicture],
+        (_, resultSet) => console.log("User added successfully", resultSet),
+        (_, error) => {
+          console.log("Error adding user: ", error);
+          reject(error);
+        }
+      );
+    });
   });
 };
 
 // Retrieve users from the Users table
 export const getUsers = () => {
-  db.transaction((tx) => {
-    tx.executeSql(
-      "SELECT * FROM Users;",
-      [],
-      (_, { rows }) => console.log("Users: ", rows._array),
-      (_, error) => console.log("Error retrieving users: ", error)
-    );
+  return new Promise((resolve, reject) => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        "SELECT * FROM Users;",
+        [],
+        (_, { rows }) => {
+          console.log("Users: ", rows._array);
+          resolve(rows._array.length > 0 ? rows._array : null);
+        },
+        (_, error) => {
+          console.log("Error retrieving users: ", error);
+          reject(error);
+        }
+      );
+    });
   });
 };
+export const getUserProfile = (userId) => {
+  return new Promise((resolve, reject) => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        "SELECT * FROM Users WHERE user_id = ?;",
+        [userId],
+        (_, { rows }) =>
+          resolve(rows._array.length > 0 ? rows._array[0] : null),
+        (_, error) => {
+          console.log("Error retrieving user profile: ", error);
+          reject(error);
+        }
+      );
+    });
+  });
+};
+
 export const insertChannel = (channel_id, name, description) => {
   return new Promise((resolve, reject) => {
     db.transaction((tx) => {
@@ -151,20 +181,31 @@ export const insertChannel = (channel_id, name, description) => {
         "INSERT INTO Channels (channel_id, name, description) VALUES (?, ?, ?, ?);",
         [channel_id, name, description],
         (_, resultSet) => console.log("Channel added successfully", resultSet),
-        (_, error) => console.log("Error adding channel: ", error)
+        (_, error) => {
+          console.log("Error adding channel: ", error);
+          reject(error);
+        }
       );
     });
   });
 };
 
 export const getChannels = () => {
-  db.transaction((tx) => {
-    tx.executeSql(
-      "SELECT * FROM Channels;",
-      [],
-      (_, { rows }) => console.log("Channels: ", rows._array),
-      (_, error) => console.log("Error retrieving channels: ", error)
-    );
+  return new Promise((resolve, reject) => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        "SELECT * FROM Channels;",
+        [],
+        (_, { rows }) => {
+          console.log("Users: ", rows._array);
+          resolve(rows._array.length > 0 ? rows._array : null);
+        },
+        (_, error) => {
+          console.log("Error retrieving users: ", error);
+          reject(error);
+        }
+      );
+    });
   });
 };
 export const insertMessage = (
