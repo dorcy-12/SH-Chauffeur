@@ -1,6 +1,6 @@
 import React, { useState, useEffect, createContext } from "react";
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View, Alert } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import RootNavigator from "./Navigator/RootNavigator";
 import { ThemeProvider } from "./context/ThemeContext";
@@ -11,12 +11,14 @@ import { AuthContext } from "./context/UserAuth";
 import { ServiceProvider } from "./context/ServiceContext";
 import loading from "./assets/loading.json";
 import LottieView from "lottie-react-native";
+import * as SQLite from "expo-sqlite";
 import {
   requestUserPermission,
   NotificationListener,
 } from "./src/Utils/pushnotifications";
 import messaging from "@react-native-firebase/messaging";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { initDB, getChannels, getUsers, getUserProfile } from "./database";
 
 PushNotification.configure({
   onRegister: function (token) {
@@ -56,36 +58,45 @@ PushNotification.configure({
 });
 
 export default function App() {
-  const [isUserLoggedIn, setIsUserLoggedIn] = useState(null);
+  const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
   const [userId, setUserId] = useState(null);
   const [partnerId, setPartnerId] = useState(null);
-  const [employeeProfile, setEmployeeProfile] = useState(null);
+  const [employeeId, setEmployeeId] = useState(null);
   const [password, setPassword] = useState(null);
   const [shouldReloadServices, setShouldReloadServices] = useState(false);
   const [channels, setChannels] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-
+ 
   useEffect(() => {
-    const checkToken = async () => {
+    const initializeApp = async () => {
       const uid = await SecureStore.getItemAsync("userId");
       const password = await SecureStore.getItemAsync("password");
-      const employeeProfile = await SecureStore.getItemAsync("employeeProfile");
-      const remoteChannels = await AsyncStorage.getItem("channels");
-      if (uid && password && employeeProfile) {
+      if (uid && password) {
+        const fetchedProfile = await getUserProfile(uid);  
+        const fetchedChannels = await getChannels();
+        setUserId(uid);
+        setPassword(password)
+        setChannels(fetchedChannels);
+        setEmployeeId(fetchedProfile.user_id);
         setIsUserLoggedIn(true);
-        setUserId(uid); // Assuming token is the userId
-        setPassword(password);
-        setEmployeeProfile(JSON.parse(employeeProfile));
-        setChannels(JSON.parse(remoteChannels));
+        setIsLoading(false);
+      } else {
+        initDB((isDbInitialized) => {
+          if (isDbInitialized) {
+            setIsLoading(false);
+          } else {
+            // Handle database initialization failure
+            console.error("Database initialization failed");
+            // Optionally set a state to show an error message to the user
+          }
+        });
       }
-
-      setIsLoading(false); // Update loading state after check
-      console.log("app is re renderd" + isLoading);
     };
 
-    checkToken();
+    initializeApp();
   }, []);
 
+  
   useEffect(() => {
     async function setupNotifications() {
       await requestUserPermission();
@@ -104,8 +115,8 @@ export default function App() {
         setUserId,
         partnerId,
         setPartnerId,
-        employeeProfile,
-        setEmployeeProfile,
+        employeeId,
+        setEmployeeId,
         password,
         setPassword,
         shouldReloadServices,
