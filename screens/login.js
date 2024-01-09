@@ -58,8 +58,8 @@ function LoginScreen({ navigation }) {
           setEmployeeId(id);
           setPassword(pin);
           setPartnerId(partnerId);
-
           // Further parallel operations
+          
           const uploadTokenPromise = uploadFirebaseToken(
             partnerId,
             fcmtoken,
@@ -97,6 +97,9 @@ function LoginScreen({ navigation }) {
             // Await all insert operations
             try {
               await Promise.all(allInsertPromises);
+
+              setIsUserLoggedIn(true);
+              console.log("loogged in");
             } catch (error) {
               // Handle any errors that occurred during insert operations
               console.error("Error during insert operations: ", error);
