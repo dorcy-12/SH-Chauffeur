@@ -128,7 +128,10 @@ export const insertUser = (
       tx.executeSql(
         "INSERT INTO Users (user_id, employee_id, partner_id, username, email, profile_picture) VALUES (?, ?, ?, ?, ?, ?);",
         [userId, employeeId, partnerId, username, email, profilePicture],
-        (_, resultSet) => console.log("User added successfully", resultSet),
+        (_, resultSet) => {
+          console.log("User added successfully", resultSet);
+          resolve(resultSet);
+        },
         (_, error) => {
           console.log("Error adding user: ", error);
           reject(error);
@@ -163,8 +166,10 @@ export const getUserProfile = (userId) => {
       tx.executeSql(
         "SELECT * FROM Users WHERE user_id = ?;",
         [userId],
-        (_, { rows }) =>
-          resolve(rows._array.length > 0 ? rows._array[0] : null),
+        (_, { rows }) => {
+          console.log("User successfully retrieved");
+          resolve(rows._array.length > 0 ? rows._array[0] : null);
+        },
         (_, error) => {
           console.log("Error retrieving user profile: ", error);
           reject(error);
@@ -178,9 +183,12 @@ export const insertChannel = (channel_id, name, description) => {
   return new Promise((resolve, reject) => {
     db.transaction((tx) => {
       tx.executeSql(
-        "INSERT INTO Channels (channel_id, name, description) VALUES (?, ?, ?, ?);",
+        "INSERT INTO Channels (channel_id, name, description) VALUES (?, ?, ?);",
         [channel_id, name, description],
-        (_, resultSet) => console.log("Channel added successfully", resultSet),
+        (_, resultSet) => {
+          console.log("Channel added successfully", resultSet);
+          resolve(resultSet);
+        },
         (_, error) => {
           console.log("Error adding channel: ", error);
           reject(error);
@@ -197,11 +205,11 @@ export const getChannels = () => {
         "SELECT * FROM Channels;",
         [],
         (_, { rows }) => {
-          console.log("Users: ", rows._array);
+          console.log("Channels: ", rows._array);
           resolve(rows._array.length > 0 ? rows._array : null);
         },
         (_, error) => {
-          console.log("Error retrieving users: ", error);
+          console.log("Error retrieving Channels: ", error);
           reject(error);
         }
       );

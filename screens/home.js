@@ -28,12 +28,13 @@ function HomeScreen({ navigation }) {
   const [refreshing, setRefreshing] = useState(false); // Add this line
   const { setIsUserLoggedIn, userId, password } =
     useContext(AuthContext);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   const { shouldReloadServices, setShouldReloadServices } =
     useContext(AuthContext);
 
   useEffect(() => {
+  
     PushNotification.createChannel(
       {
         channelId: "timer-channel", // (required)
@@ -57,9 +58,9 @@ function HomeScreen({ navigation }) {
         password
       );
 
-      console.log("the suer" + userId);
+      console.log("the user " + userId);
       setServices(fetchedServices);
-      console.log(fetchedServices);
+      console.log("fetched services" + fetchedServices);
     } catch (error) {
       console.error("Error loading services:", error);
     } finally {
@@ -69,6 +70,7 @@ function HomeScreen({ navigation }) {
   useEffect(() => {
     loadServices();
   }, []);
+
   useEffect(() => {
     if (shouldReloadServices) {
       reloadServices();
