@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
-import { parseString } from "react-native-xml2js";
+
 import { insertChannel } from "../database";
 
 // Update with your Odoo server details
@@ -64,8 +64,7 @@ export async function fetchEmployeeProfile(userId, password) {
     console.log(employeeData);
 
     if (employeeData && employeeData.length > 0) {
-      const employeeProfileString = JSON.stringify(employeeData[0]);
-      await SecureStore.setItemAsync("employeeProfile", employeeProfileString);
+      await SecureStore.setItemAsync("employeeId",`${employeeData[0].id}`);
       return employeeData[0];
     }
     return null;
@@ -418,15 +417,9 @@ export async function getDiscussChannels(userId, partnerId) {
 
   try {
     const response = await axios.post(url, payload);
-    const channels = response.data.result;
+    const result = response.data.result;
     console.log("Channels successfully retrieved", result);
-    // Insert channels into SQLite
-    const insertPromises = channels.map(channel =>
-      insertChannel(channel.id, channel.name, channel.description)
-    );
-    // Execute all insert operations in parallel
-    await Promise.all(insertPromises); 
-    return; // Returns the ID of the created record
+    return result; // Returns the ID of the created record
   } catch (error) {
     console.error("Error in retrieving channels", error);
     throw error;
