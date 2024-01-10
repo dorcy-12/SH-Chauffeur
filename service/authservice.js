@@ -409,7 +409,7 @@ export async function getDiscussChannels(userId, partnerId) {
         "mail.channel",
         "search_read",
         [[["channel_partner_ids", "in", partnerId]]], // Your domain, an empty list means all records
-        { fields: ["id", "name", "description"] }, // Specify the fields you want to retrieve
+        { fields: ["id", "name", "description", "channel_type"] }, // Specify the fields you want to retrieve
       ],
     },
     id: Math.floor(Math.random() * 100) + 1,

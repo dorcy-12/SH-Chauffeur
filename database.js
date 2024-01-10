@@ -51,6 +51,7 @@ export const initDB = (callback) => {
         "channel_id INTEGER PRIMARY KEY NOT NULL, " +
         "name VARCHAR(50), " +
         "description VARCHAR(255)" +
+        "channel_type VARCHAR(20)" +
         ");",
       [],
       () => {
@@ -179,12 +180,12 @@ export const getUserProfile = (userId) => {
   });
 };
 
-export const insertChannel = (channel_id, name, description) => {
+export const insertChannel = (channel_id, name, description, channel_type) => {
   return new Promise((resolve, reject) => {
     db.transaction((tx) => {
       tx.executeSql(
-        "INSERT INTO Channels (channel_id, name, description) VALUES (?, ?, ?);",
-        [channel_id, name, description],
+        "INSERT INTO Channels (channel_id, name, description, channel_type) VALUES (?, ?, ?, ?);",
+        [channel_id, name, description, channel_type],
         (_, resultSet) => {
           console.log("Channel added successfully", resultSet);
           resolve(resultSet);

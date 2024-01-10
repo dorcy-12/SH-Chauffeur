@@ -85,7 +85,7 @@ function LoginScreen({ navigation }) {
               image_1920
             );
             const channelInsertPromises = channels.map((channel) =>
-              insertChannel(channel.id, channel.name, channel.description)
+              insertChannel(channel.id, channel.name, channel.description, channel.channel_type)
             );
 
             // Combine all promises
