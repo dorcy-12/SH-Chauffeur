@@ -68,7 +68,7 @@ export const initDB = (callback) => {
   db.transaction((tx) => {
     tx.executeSql(
       "CREATE TABLE IF NOT EXISTS Messages (" +
-        "message_id INTEGER PRIMARY KEY NOT NULL, " +
+        "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
         "odoo_message_id INTEGER, " +
         "channel_id INTEGER, " +
         "user_id INTEGER, " +
@@ -218,7 +218,6 @@ export const getChannels = () => {
   });
 };
 export const insertMessage = (
-  message_id,
   odoo_message_id,
   channel_id,
   user_id,
@@ -226,21 +225,28 @@ export const insertMessage = (
   timestamp,
   is_attachment
 ) => {
-  db.transaction((tx) => {
-    tx.executeSql(
-      "INSERT INTO Messages (message_id, odoo_message_id, channel_id, user_id, message, timestamp, is_attachment) VALUES (?, ?, ?, ?, ?, ?, ?);",
-      [
-        message_id,
-        odoo_message_id,
-        channel_id,
-        user_id,
-        message,
-        timestamp,
-        is_attachment,
-      ],
-      (_, resultSet) => console.log("Message added successfully", resultSet),
-      (_, error) => console.log("Error adding message: ", error)
-    );
+  return new Promise((resolve, reject) => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        "INSERT INTO Messages (odoo_message_id, channel_id, user_id, message, timestamp, is_attachment) VALUES (?, ?, ?, ?, ?, ?);",
+        [
+          odoo_message_id,
+          channel_id,
+          user_id,
+          message,
+          timestamp,
+          is_attachment,
+        ],
+        (_, resultSet) => {
+          console.log("Message added successfully", resultSet);
+          resolve(resultSet);
+        },
+        (_, error) => {
+          console.log("Error adding message: ", error);
+          reject(error);
+        }
+      );
+    });
   });
 };
 export const getMessages = (channel_id) => {
