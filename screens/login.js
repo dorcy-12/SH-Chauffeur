@@ -76,6 +76,7 @@ function LoginScreen({ navigation }) {
           console.log("Firebase token uploaded. Record ID:", uploadResult);
 
           if (channels) {
+            setChannels(channels);
             const userInsertPromise = insertUser(
               id,
               partnerId,
