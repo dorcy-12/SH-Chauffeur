@@ -19,6 +19,7 @@ import {
 import messaging from "@react-native-firebase/messaging";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { initDB, getChannels, getUsers, getUserProfile } from "./database";
+import { MessageProvider } from "./context/MessageContext";
 
 PushNotification.configure({
   onRegister: function (token) {
@@ -66,18 +67,21 @@ export default function App() {
   const [shouldReloadServices, setShouldReloadServices] = useState(false);
   const [channels, setChannels] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
- 
+
   useEffect(() => {
     const initializeApp = async () => {
       const uid = await SecureStore.getItemAsync("userId");
+      console.log(uid);
       const password = await SecureStore.getItemAsync("password");
+      const employeeId = await SecureStore.getItemAsync("employeeId");
+      console.log("password");
       if (uid && password) {
-        const fetchedProfile = await getUserProfile(uid);  
         const fetchedChannels = await getChannels();
         setUserId(uid);
-        setPassword(password)
+        setPassword(password);
         setChannels(fetchedChannels);
-        setEmployeeId(fetchedProfile.user_id);
+        console.log(fetchedChannels);
+        setEmployeeId(employeeId);
         setIsUserLoggedIn(true);
         setIsLoading(false);
       } else {
@@ -96,7 +100,6 @@ export default function App() {
     initializeApp();
   }, []);
 
-  
   useEffect(() => {
     async function setupNotifications() {
       await requestUserPermission();
@@ -107,43 +110,45 @@ export default function App() {
   }, []); // Adding an empty dependency array to run only once
 
   return (
-    <AuthContext.Provider
-      value={{
-        isUserLoggedIn,
-        setIsUserLoggedIn,
-        userId,
-        setUserId,
-        partnerId,
-        setPartnerId,
-        employeeId,
-        setEmployeeId,
-        password,
-        setPassword,
-        shouldReloadServices,
-        setShouldReloadServices,
-        channels,
-        setChannels,
-      }}
-    >
-      <ThemeProvider>
-        {isLoading ? (
-          <View style={styles.loadingContainer}>
-            <LottieView
-              source={loading}
-              autoPlay
-              loop
-              style={styles.lottieAnimation}
-            />
-          </View>
-        ) : (
-          <NavigationContainer>
-            <ServiceProvider>
-              <RootNavigator />
-            </ServiceProvider>
-          </NavigationContainer>
-        )}
-      </ThemeProvider>
-    </AuthContext.Provider>
+    <MessageProvider>
+      <AuthContext.Provider
+        value={{
+          isUserLoggedIn,
+          setIsUserLoggedIn,
+          userId,
+          setUserId,
+          partnerId,
+          setPartnerId,
+          employeeId,
+          setEmployeeId,
+          password,
+          setPassword,
+          shouldReloadServices,
+          setShouldReloadServices,
+          channels,
+          setChannels,
+        }}
+      >
+        <ThemeProvider>
+          {isLoading ? (
+            <View style={styles.loadingContainer}>
+              <LottieView
+                source={loading}
+                autoPlay
+                loop
+                style={styles.lottieAnimation}
+              />
+            </View>
+          ) : (
+            <NavigationContainer>
+              <ServiceProvider>
+                <RootNavigator />
+              </ServiceProvider>
+            </NavigationContainer>
+          )}
+        </ThemeProvider>
+      </AuthContext.Provider>
+    </MessageProvider>
   );
 }
 
