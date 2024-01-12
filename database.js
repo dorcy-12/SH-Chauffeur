@@ -49,7 +49,7 @@ export const initDB = (callback) => {
       "CREATE TABLE IF NOT EXISTS Channels (" +
         "channel_id INTEGER PRIMARY KEY NOT NULL, " +
         "name VARCHAR(50), " +
-        "description VARCHAR(255)" +
+        "description VARCHAR(255)," +
         "channel_type VARCHAR(20)" +
         ");",
       [],
@@ -116,7 +116,6 @@ export const initDB = (callback) => {
 
 // Insert a user into the Users table
 export const insertUser = (
-  userId,
   employeeId,
   partnerId,
   username,
@@ -165,7 +164,7 @@ export const getUserProfile = (employeeId) => {
     db.transaction((tx) => {
       tx.executeSql(
         "SELECT * FROM Users WHERE employee_id = ?;",
-        [userId],
+        [employeeId],
         (_, { rows }) => {
           console.log("User successfully retrieved");
           resolve(rows._array.length > 0 ? rows._array[0] : null);
