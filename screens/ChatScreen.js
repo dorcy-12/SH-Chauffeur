@@ -22,16 +22,18 @@ import { Ionicons, Feather } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
 import { AuthContext } from "../context/UserAuth";
 import { getDiscussChannels } from "../service/authservice";
+import { useMessageContext } from "../context/MessageContext";
+import { getChannels } from "../database";
 
 const { width, height } = Dimensions.get("window");
 const ChatScreen = () => {
-  const [currentChannel, setCurrentChannel] = useState("general");
+  const { messages, setMessages } = useMessageContext();
   const [sidebarVisible, setSidebarVisible] = useState(false);
-  const [messages, setMessages] = useState({}); // Store messages per channel
   const theme = useTheme();
   const styles = createStyles(theme);
   const sidebarX = useRef(new Animated.Value(-width * 0.7)).current;
   const { channels } = useContext(AuthContext);
+  const [currentChannel, setCurrentChannel] = useState(channels[0]);
 
   useEffect(() => {
     const targetValue = sidebarVisible ? 0 : -width * 0.7;
@@ -42,20 +44,18 @@ const ChatScreen = () => {
     }).start();
   }, [sidebarVisible]);
 
-  
-
   const onSend = (newMessages = []) => {
     setMessages((previousMessages) => ({
       ...previousMessages,
-      [currentChannel]: GiftedChat.append(
-        previousMessages[currentChannel] || [],
+      [currentChannel.channel_id]: GiftedChat.append(
+        previousMessages[currentChannel.channel_id] || [],
         newMessages
       ),
     }));
   };
 
   const selectChannel = (channel) => {
-    setCurrentChannel(channel.name);
+    setCurrentChannel(channel);
     setSidebarVisible(false);
     console.log(channels);
   };
@@ -137,7 +137,7 @@ const ChatScreen = () => {
         onPress={handleMenuButtonPressed}
       >
         <Ionicons name="menu" size={30} color={theme.secondary} />
-        <Text style={styles.currentChannel}>{currentChannel}</Text>
+        <Text style={styles.currentChannel}>{currentChannel.name}</Text>
       </TouchableOpacity>
 
       <Animated.View
@@ -157,7 +157,7 @@ const ChatScreen = () => {
             >
               <Text
                 style={
-                  channel.name === currentChannel
+                  channel.name === currentChannel.name
                     ? styles.highlightedChannel
                     : styles.channel
                 }
@@ -176,7 +176,7 @@ const ChatScreen = () => {
       >
         <View style={[styles.chatContainer]}>
           <GiftedChat
-            messages={messages[currentChannel] || []}
+            messages={messages[currentChannel.channel_id] || []}
             onSend={(newMessages) => onSend(newMessages)}
             user={{ _id: 2 }}
             renderSend={renderSend}
