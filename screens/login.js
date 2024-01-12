@@ -77,7 +77,6 @@ function LoginScreen({ navigation }) {
 
           if (channels) {
             const userInsertPromise = insertUser(
-              uid,
               id,
               partnerId,
               name,

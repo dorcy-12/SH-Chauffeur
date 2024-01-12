@@ -52,7 +52,7 @@ const ProfileScreen = ({ navigation }) => {
     const fetchAndSetUserProfile = async () => {
       try {
         console.log(userId);
-        const userProfile = await getUserProfile(userId);
+        const userProfile = await getUserProfile(employeeId);
 
         if (userProfile) {
           setProfileData({

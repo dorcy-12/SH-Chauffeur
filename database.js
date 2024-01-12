@@ -26,8 +26,7 @@ export const initDB = (callback) => {
   db.transaction((tx) => {
     tx.executeSql(
       "CREATE TABLE IF NOT EXISTS Users (" +
-        "user_id INTEGER PRIMARY KEY NOT NULL, " +
-        "employee_id INTEGER," +
+        "employee_id INTEGER PRIMARY KEY NOT NULL, " +
         "partner_id INTEGER, " +
         "username VARCHAR(30), " +
         "email VARCHAR(30), " +
@@ -127,8 +126,8 @@ export const insertUser = (
   return new Promise((resolve, reject) => {
     db.transaction((tx) => {
       tx.executeSql(
-        "INSERT INTO Users (user_id, employee_id, partner_id, username, email, profile_picture) VALUES (?, ?, ?, ?, ?, ?);",
-        [userId, employeeId, partnerId, username, email, profilePicture],
+        "INSERT INTO Users (employee_id, partner_id, username, email, profile_picture) VALUES (?, ?, ?, ?, ?);",
+        [employeeId, partnerId, username, email, profilePicture],
         (_, resultSet) => {
           console.log("User added successfully", resultSet);
           resolve(resultSet);
@@ -161,11 +160,11 @@ export const getUsers = () => {
     });
   });
 };
-export const getUserProfile = (userId) => {
+export const getUserProfile = (employeeId) => {
   return new Promise((resolve, reject) => {
     db.transaction((tx) => {
       tx.executeSql(
-        "SELECT * FROM Users WHERE user_id = ?;",
+        "SELECT * FROM Users WHERE employee_id = ?;",
         [userId],
         (_, { rows }) => {
           console.log("User successfully retrieved");
