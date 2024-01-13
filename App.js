@@ -17,9 +17,8 @@ import {
   NotificationListener,
 } from "./src/Utils/pushnotifications";
 import messaging from "@react-native-firebase/messaging";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { initDB, getChannels, getUsers, getUserProfile } from "./database";
-import { MessageProvider } from "./context/MessageContext";
+import { MessageProvider, useMessageContext } from "./context/MessageContext";
 
 PushNotification.configure({
   onRegister: function (token) {
@@ -57,6 +56,26 @@ PushNotification.configure({
   popInitialNotification: true,
   requestPermissions: Platform.OS === "ios",
 });
+
+const App2 = () => {
+  const { addMessage } = useMessageContext();
+  useEffect(() => {
+    async function setupNotifications() {
+      await requestUserPermission();
+      NotificationListener(addMessage);
+    }
+
+    setupNotifications();
+  }, []); // Adding an empty dependency array to run only once
+
+  return (
+    <NavigationContainer>
+      <ServiceProvider>
+        <RootNavigator />
+      </ServiceProvider>
+    </NavigationContainer>
+  );
+};
 
 export default function App() {
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
@@ -99,36 +118,26 @@ export default function App() {
 
     initializeApp();
   }, []);
-
-  useEffect(() => {
-    async function setupNotifications() {
-      await requestUserPermission();
-      NotificationListener();
-    }
-
-    setupNotifications();
-  }, []); // Adding an empty dependency array to run only once
-
   return (
-    <MessageProvider>
-      <AuthContext.Provider
-        value={{
-          isUserLoggedIn,
-          setIsUserLoggedIn,
-          userId,
-          setUserId,
-          partnerId,
-          setPartnerId,
-          employeeId,
-          setEmployeeId,
-          password,
-          setPassword,
-          shouldReloadServices,
-          setShouldReloadServices,
-          channels,
-          setChannels,
-        }}
-      >
+    <AuthContext.Provider
+      value={{
+        isUserLoggedIn,
+        setIsUserLoggedIn,
+        userId,
+        setUserId,
+        partnerId,
+        setPartnerId,
+        employeeId,
+        setEmployeeId,
+        password,
+        setPassword,
+        shouldReloadServices,
+        setShouldReloadServices,
+        channels,
+        setChannels,
+      }}
+    >
+      <MessageProvider>
         <ThemeProvider>
           {isLoading ? (
             <View style={styles.loadingContainer}>
@@ -140,15 +149,11 @@ export default function App() {
               />
             </View>
           ) : (
-            <NavigationContainer>
-              <ServiceProvider>
-                <RootNavigator />
-              </ServiceProvider>
-            </NavigationContainer>
+            <App2 />
           )}
         </ThemeProvider>
-      </AuthContext.Provider>
-    </MessageProvider>
+      </MessageProvider>
+    </AuthContext.Provider>
   );
 }
 

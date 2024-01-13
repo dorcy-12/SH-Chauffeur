@@ -27,12 +27,12 @@ import { getChannels } from "../database";
 
 const { width, height } = Dimensions.get("window");
 const ChatScreen = () => {
-  const { messages, setMessages } = useMessageContext();
+  const { messages, addMessage } = useMessageContext();
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const theme = useTheme();
   const styles = createStyles(theme);
   const sidebarX = useRef(new Animated.Value(-width * 0.7)).current;
-  const { channels } = useContext(AuthContext);
+  const { channels, employeeId } = useContext(AuthContext);
   const [currentChannel, setCurrentChannel] = useState(channels[0]);
 
   useEffect(() => {
@@ -44,20 +44,17 @@ const ChatScreen = () => {
     }).start();
   }, [sidebarVisible]);
 
+  useEffect(() => {}, [messages]);
+
   const onSend = (newMessages = []) => {
-    setMessages((previousMessages) => ({
-      ...previousMessages,
-      [currentChannel.channel_id]: GiftedChat.append(
-        previousMessages[currentChannel.channel_id] || [],
-        newMessages
-      ),
-    }));
+    console.log(newMessages);
+    addMessage(currentChannel.channel_id, newMessages);
   };
 
   const selectChannel = (channel) => {
     setCurrentChannel(channel);
     setSidebarVisible(false);
-    console.log(channels);
+    console.log(channel);
   };
 
   const renderSend = (props) => {
@@ -126,7 +123,6 @@ const ChatScreen = () => {
   };
 
   const handleMenuButtonPressed = () => {
-    console.log("pressed");
     setSidebarVisible(!sidebarVisible);
   };
 
@@ -178,7 +174,7 @@ const ChatScreen = () => {
           <GiftedChat
             messages={messages[currentChannel.channel_id] || []}
             onSend={(newMessages) => onSend(newMessages)}
-            user={{ _id: 2 }}
+            user={{ _id: employeeId }}
             renderSend={renderSend}
             renderInputToolbar={renderInputToolbar}
             renderComposer={renderComposer}

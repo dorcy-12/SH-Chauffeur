@@ -32,10 +32,7 @@ async function GetItemToken() {
   }
 }
 
-export const NotificationListener = () => {
-  const { addMessage } = useMessageContext();
-  
-
+export const NotificationListener = (addMessage) => {
   messaging().onNotificationOpenedApp((remoteMessage) => {
     console.log(
       "Notification caused app to open from background state:",
@@ -55,50 +52,39 @@ export const NotificationListener = () => {
     });
 
   messaging().onMessage(async (remoteMessage) => {
+    const { title, body } = remoteMessage.notification;
+    console.log("triggered");
     console.log("Remote notifications on foreground state", remoteMessage);
     if (remoteMessage.data) {
-      // Extract data from the notification payload
-      const {
-        message_id, channel_id, user_id, message, timestamp,attachment_ids, status
-      } = remoteMessage.data;
-  
-      // Store the message in the SQLite database
-      try {
-        await insertMessage(
-          message_id, 
-          message_id,  // Assuming odoo_message_id is the same as message_id
-          channel_id,
-          user_id,
-          message,
-          timestamp,
-          attachment_ids,  // Assuming 'is_attachment' is false
-          "revceived"
-        );
-        console.log("Message stored in SQLite database");
-      } catch (error) {
-        console.error("Error storing message in SQLite database:", error);
-      }
+      const notificationData = remoteMessage.data.message_id;
+      const parsedData = JSON.parse(notificationData.replace(/'/g, '"'));
+      await displayMessage(parsedData, body);
     }
 
+    /*
     if (remoteMessage.notification) {
-      const { title, body } = remoteMessage.notification || {};
+      //const { title, body } = remoteMessage.notification || {};
+    
       if (remoteMessage.data) {
-        storeMessage(remoteMessage.data, body);
-        //displayMessage(remoteMessage.data, body);
+        //storeMessage(remoteMessage.data, body);
+        //console.log(remoteMessage.data.message_id);
+        
       }
+    
       if (title && body) {
         console.log("Push notification about to be sent");
-
+        
         PushNotification.localNotification({
           channelId: "timer-channel",
-          id: 17, // Convert to string
+          id: 1, // Convert to string
           title: title,
           message: body,
         });
+        
       }
     } else {
       console.log("No notification data found in remoteMessage.");
-    }
+    }*/
   });
 
   const storeMessage = async (data, message) => {
@@ -120,25 +106,34 @@ export const NotificationListener = () => {
     }
   };
 
-  const displayMessage = (data, message) => {
+  const displayMessage = async (data, message) => {
+    console.log("in desplay message with" + data);
     const {
-      channel_id,
       message_id,
-      author_name,
+      channel_id,
       author_id,
-      date: timestamp,
+      author_name,
+      timestamp,
     } = data;
+    console.log("message id is " + message_id);
     const time = new Date(timestamp);
     const newMessage = {
-      _id: message_id, // Assuming you have a unique message ID
+      _id: parseInt(message_id, 10), // Assuming you have a unique message ID
       text: message,
       createdAt: time, // Or use timestamp from the notification data
       user: {
-        _id: author_id, // Unique ID for the author
+        _id: parseInt(author_id, 10), // Unique ID for the author
         name: author_name, // Author's name
       },
     };
-    addMessage(channel_id, newMessage);
+    console.log(
+      "Message adding to gifteed chat" +
+        data.channel_id +
+        "on chat" +
+        channel_id
+    );
+    addMessage(parseInt(channel_id, 10), newMessage);
+    console.log("finished addind");
   };
 };
 export default NotificationListener;

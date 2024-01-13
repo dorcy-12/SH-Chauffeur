@@ -1,5 +1,8 @@
 // MessageContext.js
 import React, { createContext, useContext, useState } from 'react';
+import {
+  GiftedChat,
+} from "react-native-gifted-chat";
 
 const MessageContext = createContext();
 
