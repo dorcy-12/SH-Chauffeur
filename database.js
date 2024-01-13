@@ -73,7 +73,8 @@ export const initDB = (callback) => {
         "user_id INTEGER, " +
         "message TEXT, " +
         "timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, " +
-        "is_attachment BOOLEAN," +
+        "attachment_ids TEXT," +
+        "status TEXT CHECK(status IN ('sent', 'received', 'pending')) DEFAULT 'pending', " +
         "FOREIGN KEY (channel_id) REFERENCES Channels(channel_id)," +
         "FOREIGN KEY (user_id) REFERENCES Users(user_id)" +
         ");",
@@ -221,7 +222,8 @@ export const insertMessage = (
   user_id,
   message,
   timestamp,
-  is_attachment
+  attachment_ids,
+  status = "pending"
 ) => {
   return new Promise((resolve, reject) => {
     db.transaction((tx) => {
@@ -233,7 +235,7 @@ export const insertMessage = (
           user_id,
           message,
           timestamp,
-          is_attachment,
+          attachment_ids,
         ],
         (_, resultSet) => {
           console.log("Message added successfully", resultSet);
