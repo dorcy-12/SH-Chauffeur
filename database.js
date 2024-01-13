@@ -228,7 +228,7 @@ export const insertMessage = (
   return new Promise((resolve, reject) => {
     db.transaction((tx) => {
       tx.executeSql(
-        "INSERT INTO Messages (odoo_message_id, channel_id, user_id, message, timestamp, is_attachment) VALUES (?, ?, ?, ?, ?, ?);",
+        "INSERT INTO Messages (odoo_message_id, channel_id, user_id, message, timestamp, attachment_ids) VALUES (?, ?, ?, ?, ?, ?);",
         [
           odoo_message_id,
           channel_id,
