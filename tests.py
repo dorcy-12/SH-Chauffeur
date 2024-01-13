@@ -1,7 +1,8 @@
 import xmlrpc.client
 import base64
 from datetime import datetime
-
+dorcy, dorcypw = "h.dorcy@sh-personal.com", "amatama"
+admin, adminpw = "default@localhost.localdomain", "9N*Aj8#tW9"
 
 #context = ssl.create_default_context(cafile=certifi.where())
 #info = xmlrpc.client.ServerProxy('https://demo.odoo.com/start', context = context).start()
@@ -128,15 +129,15 @@ def getpartners():
     )
     for response in responses:
         print(response)
-#getpartners()
+getpartners()
 def getchannels():
     responses = models.execute_kw(db, uid, password,
                                  'mail.channel', 'search_read',
-                                 [[['channel_partner_ids', 'in', 3]]],
+                                 [[]],
                                  { 'fields': ['name', 'description', 'channel_type', 'public']})
     for response in responses:
         print(response)
-getchannels()
+#getchannels()
 
 def sendMessage(msg, id):
     response = models.execute_kw(db, uid, password,
@@ -150,13 +151,13 @@ def sendMessage(msg, id):
 def getMessages(id):
     messages =  models.execute_kw(db, uid, password,
                 'mail.message', 'search_read',
-                [[('res_id', '=', id), ('model', '=', 'mail.channel')]],  # Filter for the specific channel
-                {'fields': ['body', 'date', 'author_id', 'attachment_ids'],'limit': 10})  # Fields you want to retrieve
+                [[('res_id', '=', id)]],  # Filter for the specific channel
+                {'limit': 1})  # Fields you want to retrieve
 
     # Print the retrieved messages
     print(messages)
 
-#cleagetMessages(5)
+getMessages(5)
 
 def downloadAttachment(attachment_id):
     attachment = models.execute_kw(db, uid, password,
