@@ -34,6 +34,8 @@ async function GetItemToken() {
 
 export const NotificationListener = () => {
   const { addMessage } = useMessageContext();
+  
+
   messaging().onNotificationOpenedApp((remoteMessage) => {
     console.log(
       "Notification caused app to open from background state:",
@@ -54,6 +56,29 @@ export const NotificationListener = () => {
 
   messaging().onMessage(async (remoteMessage) => {
     console.log("Remote notifications on foreground state", remoteMessage);
+    if (remoteMessage.data) {
+      // Extract data from the notification payload
+      const {
+        message_id, channel_id, user_id, message, timestamp,attachment_ids, status
+      } = remoteMessage.data;
+  
+      // Store the message in the SQLite database
+      try {
+        await insertMessage(
+          message_id, 
+          message_id,  // Assuming odoo_message_id is the same as message_id
+          channel_id,
+          user_id,
+          message,
+          timestamp,
+          attachment_ids,  // Assuming 'is_attachment' is false
+          "revceived"
+        );
+        console.log("Message stored in SQLite database");
+      } catch (error) {
+        console.error("Error storing message in SQLite database:", error);
+      }
+    }
 
     if (remoteMessage.notification) {
       const { title, body } = remoteMessage.notification || {};
