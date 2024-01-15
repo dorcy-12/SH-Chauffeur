@@ -22,9 +22,14 @@ import {
 import { Ionicons, Feather } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
 import { AuthContext } from "../context/UserAuth";
-import { getDiscussChannels, sendMessage } from "../service/authservice";
+import {
+  getDiscussChannels,
+  sendMessage,
+  getServerMessages,
+} from "../service/authservice";
 import { useMessageContext } from "../context/MessageContext";
-import { getChannels } from "../database";
+import { getChannels, insertMessage, getMessages } from "../database";
+import LottieView from "lottie-react-native";
 
 const { width, height } = Dimensions.get("window");
 const ChatScreen = () => {
@@ -33,8 +38,9 @@ const ChatScreen = () => {
   const theme = useTheme();
   const styles = createStyles(theme);
   const sidebarX = useRef(new Animated.Value(-width * 0.7)).current;
-  const { userId,channels, employeeId } = useContext(AuthContext);
+  const { userId, channels, partnerId } = useContext(AuthContext);
   const [currentChannel, setCurrentChannel] = useState(channels[0]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const targetValue = sidebarVisible ? 0 : -width * 0.7;
@@ -45,10 +51,70 @@ const ChatScreen = () => {
     }).start();
   }, [sidebarVisible]);
 
-  useEffect(() => {}, [messages]);
+  useEffect(() => {
+    const fetchAndStoreMessages = async () => {
+      const localMessages = await getMessages(currentChannel.channel_id);
+      //console.log(messages[currentChannel.channel_id]);
+      if (messages[currentChannel.channel_id] == undefined) {
+        setIsLoading(true);
+        const serverMessages = await getServerMessages(
+          userId,
+          currentChannel.channel_id,
+          20
+        );
+
+        console.log(serverMessages);
+
+        // Store messages in SQLite
+
+        serverMessages.forEach(async (msg) => {
+          const body = msg.body.replace(/<\/?[^>]+(>|$)/g, "");
+          console.log(body);
+          console.log(msg.author_id[1]);
+          console.log("author id " + msg.author_id[0]);
+
+          console.log(msg.date);
+          // Convert attachment_ids array to JSON string
+          const attachment_ids = JSON.stringify(msg.attachment_ids || []);
+          await insertMessage(
+            msg.id, // Use the correct property for message ID
+            currentChannel.channel_id,
+            msg.author_id[0],
+            msg.author_id[1],
+            body,
+            new Date(msg.date),
+            attachment_ids,
+            msg.author_id[0] == partnerId ? "sent" : "received" // or the appropriate status
+          );
+      
+          const newMessage = {
+            _id: msg.id,
+            text: body,
+            createdAt: new Date(msg.date),
+            user: {
+              _id: msg.author_id[0],
+              name: msg.author_id[1], // Assuming this is the author's name
+            },
+            // Include other properties if needed
+          };
+
+          // Update the UI
+          addMessage(currentChannel.channel_id, [newMessage]);
+        });
+        setIsLoading(false);
+      }
+    };
+
+    fetchAndStoreMessages().catch(console.error);
+  }, [currentChannel]);
 
   const onSend = async (newMessages = []) => {
-    const x = await sendMessage(userId, currentChannel.channel_id, newMessages[0].text,[])
+    const x = await sendMessage(
+      userId,
+      currentChannel.channel_id,
+      newMessages[0].text,
+      []
+    );
     console.log(x);
     console.log(newMessages);
     addMessage(currentChannel.channel_id, newMessages);
@@ -154,61 +220,74 @@ const ChatScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <TouchableOpacity
-        style={styles.menuButton}
-        onPress={handleMenuButtonPressed}
-      >
-        <Ionicons name="menu" size={30} color={theme.secondary} />
-        <Text style={styles.currentChannel}>{currentChannel.name}</Text>
-      </TouchableOpacity>
-
-      <Animated.View
-        style={[
-          styles.sidebar,
-          {
-            transform: [{ translateX: sidebarX }],
-          },
-        ]}
-      >
-        <ScrollView>
-          <Text style={styles.channelHeader}>Kanälen</Text>
-          {channels.map((channel, index) => (
-            <TouchableOpacity
-              key={index}
-              onPress={() => selectChannel(channel)}
-            >
-              <Text
-                style={
-                  channel.name === currentChannel.name
-                    ? styles.highlightedChannel
-                    : styles.channel
-                }
-              >
-                {channel.name}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </Animated.View>
-
-      <TouchableWithoutFeedback
-        onPress={() => {
-          setSidebarVisible(false);
-        }}
-      >
-        <View style={[styles.chatContainer]}>
-          <GiftedChat
-            messages={messages[currentChannel.channel_id] || []}
-            onSend={(newMessages) => onSend(newMessages)}
-            user={{ _id: employeeId }}
-            renderSend={renderSend}
-            renderInputToolbar={renderInputToolbar}
-            renderComposer={renderComposer}
-            renderChatFooter={renderChatFooter}
-            renderBubble={renderBubble} 
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <LottieView
+            source={require("../assets/loading.json")}
+            autoPlay
+            loop
+            style={styles.lottieAnimation}
           />
         </View>
-      </TouchableWithoutFeedback>
+      ) : (
+        <View style={{flex: 1}}>
+          <TouchableOpacity
+            style={styles.menu}
+            onPress={handleMenuButtonPressed}
+          >
+            <Ionicons name="menu" size={30} color={theme.secondary} />
+            <Text style={styles.currentChannel}>{currentChannel.name}</Text>
+          </TouchableOpacity>
+
+          <Animated.View
+            style={[
+              styles.sidebar,
+              {
+                transform: [{ translateX: sidebarX }],
+              },
+            ]}
+          >
+            <ScrollView>
+              <Text style={styles.channelHeader}>Kanälen</Text>
+              {channels.map((channel, index) => (
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => selectChannel(channel)}
+                >
+                  <Text
+                    style={
+                      channel.name === currentChannel.name
+                        ? styles.highlightedChannel
+                        : styles.channel
+                    }
+                  >
+                    {channel.name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </Animated.View>
+
+          <TouchableWithoutFeedback
+            onPress={() => {
+              setSidebarVisible(false);
+            }}
+          >
+            <View style={[styles.chatContainer]}>
+              <GiftedChat
+                messages={messages[currentChannel.channel_id] || []}
+                onSend={(newMessages) => onSend(newMessages)}
+                user={{ _id: partnerId }}
+                renderSend={renderSend}
+                renderInputToolbar={renderInputToolbar}
+                renderComposer={renderComposer}
+                renderChatFooter={renderChatFooter}
+                renderBubble={renderBubble}
+              />
+            </View>
+          </TouchableWithoutFeedback>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -220,13 +299,13 @@ const createStyles = (theme) =>
       paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
     },
 
-    menuButton: {
-      position: "absolute",
-      top: height * 0.06,
-      left: width * 0.05,
+    menu: {
       flexDirection: "row",
       alignItems: "center",
       zIndex: 2,
+      backgroundColor:"#F2F2F2",
+      paddingVertical:10,
+      paddingHorizontal:20
     },
     currentChannel: {
       marginLeft: 20,
@@ -237,7 +316,7 @@ const createStyles = (theme) =>
     sidebar: {
       position: "absolute",
       left: 0,
-      top: height * 0.05,
+      top: 0,
       height: "100%",
       width: "70%",
       backgroundColor: theme.primaryText,
@@ -269,6 +348,15 @@ const createStyles = (theme) =>
       backgroundColor: theme.primary,
       color: theme.primaryText,
       borderBottomRightRadius: 20,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    lottieAnimation: {
+      width: 200, // Set the size as needed
+      height: 200, // Set the size as needed
     },
 
     // Additional styles...
