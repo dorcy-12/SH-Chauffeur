@@ -93,13 +93,17 @@ export default function App() {
       console.log(uid);
       const password = await SecureStore.getItemAsync("password");
       const employeeId = await SecureStore.getItemAsync("employeeId");
+    
       console.log("password");
       if (uid && password) {
         const fetchedChannels = await getChannels();
+        const user = await getUserProfile(employeeId);
+        const partner = user.partner_id;
+        console.log("the partner is " + partner);
         setUserId(uid);
         setPassword(password);
         setChannels(fetchedChannels);
-        console.log(fetchedChannels);
+        setPartnerId(partner);
         setEmployeeId(employeeId);
         setIsUserLoggedIn(true);
         setIsLoading(false);
