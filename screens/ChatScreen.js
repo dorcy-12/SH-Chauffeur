@@ -17,11 +17,12 @@ import {
   InputToolbar,
   Composer,
   Send,
+  Bubble,
 } from "react-native-gifted-chat";
 import { Ionicons, Feather } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
 import { AuthContext } from "../context/UserAuth";
-import { getDiscussChannels } from "../service/authservice";
+import { getDiscussChannels, sendMessage } from "../service/authservice";
 import { useMessageContext } from "../context/MessageContext";
 import { getChannels } from "../database";
 
@@ -32,7 +33,7 @@ const ChatScreen = () => {
   const theme = useTheme();
   const styles = createStyles(theme);
   const sidebarX = useRef(new Animated.Value(-width * 0.7)).current;
-  const { channels, employeeId } = useContext(AuthContext);
+  const { userId,channels, employeeId } = useContext(AuthContext);
   const [currentChannel, setCurrentChannel] = useState(channels[0]);
 
   useEffect(() => {
@@ -46,7 +47,9 @@ const ChatScreen = () => {
 
   useEffect(() => {}, [messages]);
 
-  const onSend = (newMessages = []) => {
+  const onSend = async (newMessages = []) => {
+    const x = await sendMessage(userId, currentChannel.channel_id, newMessages[0].text,[])
+    console.log(x);
     console.log(newMessages);
     addMessage(currentChannel.channel_id, newMessages);
   };
@@ -122,6 +125,29 @@ const ChatScreen = () => {
     return <View style={{ height: height * 0.07 }} />;
   };
 
+  const renderBubble = (props) => {
+    return (
+      <Bubble
+        {...props}
+        wrapperStyle={{
+          left: {
+            backgroundColor: "#fff",
+          },
+          right: {
+            backgroundColor: theme.secondary, // Background color for your messages
+          },
+        }}
+        textStyle={{
+          left: {
+            color: "#000", // Text color for messages from other users
+          },
+          right: {
+            color: "#fff", // Text color for your messages
+          },
+        }}
+      />
+    );
+  };
   const handleMenuButtonPressed = () => {
     setSidebarVisible(!sidebarVisible);
   };
@@ -179,6 +205,7 @@ const ChatScreen = () => {
             renderInputToolbar={renderInputToolbar}
             renderComposer={renderComposer}
             renderChatFooter={renderChatFooter}
+            renderBubble={renderBubble} 
           />
         </View>
       </TouchableWithoutFeedback>

@@ -456,7 +456,7 @@ export async function sendMessage(userId, channel_id, msg, attachment_id) {
   try {
     const response = await axios.post(url, payload);
     const result = response.data.result;
-    console.log("Message successfully sent");
+    console.log("Message successfully sent with " + result);
     return result; // Returns the ID of the created record
   } catch (error) {
     console.error("Error in sending message", error);

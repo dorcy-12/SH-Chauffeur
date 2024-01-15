@@ -52,13 +52,13 @@ export const NotificationListener = (addMessage) => {
     });
 
   messaging().onMessage(async (remoteMessage) => {
-    const { title, body } = remoteMessage.notification;
+    const { title, body } = remoteMessage.notification || {};
     console.log("triggered");
     console.log("Remote notifications on foreground state", remoteMessage);
     if (remoteMessage.data) {
       const notificationData = remoteMessage.data.message_id;
       const parsedData = JSON.parse(notificationData.replace(/'/g, '"'));
-      await displayMessage(parsedData, body);
+      await displayMessage(parsedData);
     }
 
     /*
@@ -106,12 +106,13 @@ export const NotificationListener = (addMessage) => {
     }
   };
 
-  const displayMessage = async (data, message) => {
+  const displayMessage = async (data) => {
     console.log("in desplay message with" + data);
     const {
       message_id,
       channel_id,
       author_id,
+      message,
       author_name,
       timestamp,
     } = data;
