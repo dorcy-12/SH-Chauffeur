@@ -194,7 +194,6 @@ export async function createEmployeeCheckIn(employeeId, userId, password) {
     throw error;
   }
 }
-
 export async function createEmployeeCheckOut(checkInId, userId, password) {
   const url = `${BASE_URL}/jsonrpc`;
   const pin = await SecureStore.getItemAsync("password");
@@ -463,7 +462,7 @@ export async function sendMessage(userId, channel_id, msg, attachment_id) {
     throw error;
   }
 }
-export async function getMessages(userId, channel_id, limit) {
+export async function getServerMessages(userId, channel_id, limit) {
   const url = `${BASE_URL}/jsonrpc`;
   const pin = await SecureStore.getItemAsync("password");
 
@@ -479,10 +478,10 @@ export async function getMessages(userId, channel_id, limit) {
         pin,
         "mail.message",
         "search_read",
-        [[("res_id", "=", channel_id), ("model", "=", "mail.channel")]],
+        [[["res_id", "=", channel_id],["model", "=", "mail.channel"]]],
         {
-          fields: ["body", "date", "author_id", "attachment_ids"],
-          limit: limit,
+          fields:["id","body", "date", "author_id", "attachment_ids"],
+          limit:limit
         },
       ],
     },
@@ -492,7 +491,7 @@ export async function getMessages(userId, channel_id, limit) {
   try {
     const response = await axios.post(url, payload);
     const result = response.data.result;
-    console.log("Messages successfully retrieved");
+    console.log("Messages successfully retrieved ");
     return result; // Returns the ID of the created record
   } catch (error) {
     console.error("Error in retrieving messages", error);
