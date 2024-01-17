@@ -52,7 +52,7 @@ export async function fetchEmployeeProfile(userId, password) {
         "hr.employee",
         "search_read",
         [[["user_id", "=", parseInt(userId, 10)]]],
-        { fields: ["id", "name", "image_1920", "work_email"] }, // Adjust field names if necessary
+        { fields: ["id", "name", "image_1920", "work_email","user_partner_id"] }, // Adjust field names if necessary
       ],
     },
     id: Math.floor(Math.random() * 100) + 1,
@@ -73,7 +73,42 @@ export async function fetchEmployeeProfile(userId, password) {
     throw error;
   }
 }
+export async function fetchAllEmployees(userId, password) {
+  const url = `${BASE_URL}/jsonrpc`;
+  const pin = await SecureStore.getItemAsync("password");
 
+  const payload = {
+      jsonrpc: "2.0",
+      method: "call",
+      params: {
+          service: "object",
+          method: "execute_kw",
+          args: [
+              DB_NAME,
+              userId,
+              pin,
+              "hr.employee",
+              "search_read",
+              [[]], // Empty array for matching all records
+              {
+                  fields: ["id", "name", "work_email", "image_1920"], // Specify the fields you want to retrieve
+                  // Include other fields if needed
+              },
+          ],
+      },
+      id: Math.floor(Math.random() * 100) + 1,
+  };
+
+  try {
+      const response = await axios.post(url, payload);
+      const employees = response.data.result;
+      console.log("Employees successfully retrieved", employees);
+      return employees; 
+  } catch (error) {
+    console.error("Error in fetch all employees", error);
+    throw error;
+  }
+};
 export async function fetchVehicleServices(userId, serviceState, password) {
   const url = `${BASE_URL}/jsonrpc`;
   console.log(userId);
@@ -276,44 +311,6 @@ export async function fetchCompletedServices(userId, serviceState, password) {
     return response.data.result;
   } catch (error) {
     console.error("Error in fetchVehicleServices", error);
-    throw error;
-  }
-}
-export async function fetchPartnerId(userId, password) {
-  const url = `${BASE_URL}/jsonrpc`;
-  const pin = await SecureStore.getItemAsync("password");
-
-  const payload = {
-    jsonrpc: "2.0",
-    method: "call",
-    params: {
-      service: "object",
-      method: "execute_kw",
-      args: [
-        DB_NAME,
-        userId,
-        pin,
-        "res.users",
-        "read",
-        [parseInt(userId, 10)],
-        { fields: ["partner_id"] }, // Fields to fetch
-      ],
-    },
-    id: Math.floor(Math.random() * 100) + 1,
-  };
-
-  try {
-    const response = await axios.post(url, payload);
-    const userData = response.data.result;
-    console.log(userData);
-
-    if (userData && userData.length > 0) {
-      const { partner_id } = userData[0];
-      return partner_id[0]; // Returns the partner_id
-    }
-    return null;
-  } catch (error) {
-    console.error("Error in fetchPartnerId", error);
     throw error;
   }
 }

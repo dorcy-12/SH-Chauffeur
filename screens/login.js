@@ -46,27 +46,27 @@ function LoginScreen({ navigation }) {
 
       if (uid) {
         // Execute fetchEmployeeProfile and fetchPartnerId in parallel
-        const employeeProfilePromise = fetchEmployeeProfile(uid, pin);
-        const partnerIdPromise = fetchPartnerId(uid, pin);
+        const {id, name, image_1920, work_email, user_partner_id} = await fetchEmployeeProfile(uid, pin);
+        //const partnerIdPromise = fetchPartnerId(uid, pin);
 
         // Await all promises
-        const [{ id, name, image_1920, work_email }, partnerId] =
-          await Promise.all([employeeProfilePromise, partnerIdPromise]);
+        //const [{ id, name, image_1920, work_email }, partnerId] =
+          //await Promise.all([employeeProfilePromise, partnerIdPromise]);
 
-        if (partnerId) {
+        if (id) {
           setUserId(uid);
           setEmployeeId(id);
           setPassword(pin);
-          setPartnerId(partnerId);
+          setPartnerId(user_partner_id[0]);
           // Further parallel operations
           
           const uploadTokenPromise = uploadFirebaseToken(
-            partnerId,
+            user_partner_id[0],
             fcmtoken,
             uid,
             pin
           );
-          const fetchChannelsPromise = getDiscussChannels(uid, partnerId);
+          const fetchChannelsPromise = getDiscussChannels(uid, user_partner_id[0]);
 
           // Await all promises
           const [uploadResult, channels] = await Promise.all([
@@ -79,7 +79,7 @@ function LoginScreen({ navigation }) {
             setChannels(channels);
             const userInsertPromise = insertUser(
               id,
-              partnerId,
+              user_partner_id[0],
               name,
               work_email,
               image_1920
