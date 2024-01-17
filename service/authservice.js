@@ -73,7 +73,7 @@ export async function fetchEmployeeProfile(userId, password) {
     throw error;
   }
 }
-export async function fetchAllEmployees(userId, password) {
+export async function fetchAllEmployees(userId, password, myEmployeeId) {
   const url = `${BASE_URL}/jsonrpc`;
   const pin = await SecureStore.getItemAsync("password");
 
@@ -88,10 +88,11 @@ export async function fetchAllEmployees(userId, password) {
               userId,
               pin,
               "hr.employee",
+
               "search_read",
-              [[]], // Empty array for matching all records
+              [[["id", "!=", myEmployeeId]]], // Empty array for matching all records
               {
-                  fields: ["id", "name", "work_email", "image_1920"], // Specify the fields you want to retrieve
+                  fields: ["id", "name", "work_email","mobile_phone", "user_partner_id", "attendance_state"], // Specify the fields you want to retrieve
                   // Include other fields if needed
               },
           ],
