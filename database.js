@@ -192,6 +192,26 @@ export const getUserProfile = (employeeId) => {
     });
   });
 };
+export const getUserCounts = () => {
+  return new Promise((resolve, reject) => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        "SELECT " +
+        "(SELECT COUNT(*) FROM Users) as totalEmployees, " +
+        "(SELECT COUNT(*) FROM Users WHERE attendance_state = 'checked_in') as activeEmployees, " +
+        "(SELECT COUNT(*) FROM Users WHERE attendance_state = 'checked_out') as inactiveEmployees;",
+        [],
+        (_, { rows }) => {
+          resolve(rows._array.length > 0 ? rows._array[0] : null);
+        },
+        (_, error) => {
+          reject(error);
+        }
+      );
+    });
+  });
+};
+
 
 export const insertChannel = (channel_id, name, description, channel_type) => {
   return new Promise((resolve, reject) => {
