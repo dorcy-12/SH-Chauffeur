@@ -28,9 +28,12 @@ export const initDB = (callback) => {
       "CREATE TABLE IF NOT EXISTS Users (" +
         "employee_id INTEGER PRIMARY KEY NOT NULL, " +
         "partner_id INTEGER, " +
-        "username VARCHAR(30), " +
-        "email VARCHAR(30), " +
-        "profile_picture VARCHAR(255)" +
+        "name VARCHAR(255), " + // Changed from username to name
+        "email VARCHAR(255), " + // Adjusted field length
+        "mobile_phone VARCHAR(20), " + // Added mobile_phone field
+        "user_partner_id INTEGER, " + // Added user_partner_id field
+        "attendance_state VARCHAR(20), " + // Added attendance_state field
+        "profile_picture VARCHAR(255)" + // Existing profile_picture field
         ");",
       [],
       () => {
@@ -47,7 +50,7 @@ export const initDB = (callback) => {
   db.transaction((tx) => {
     tx.executeSql(
       "CREATE TABLE IF NOT EXISTS Channels (" +
-        "channel_id INTEGER PRIMARY KEY NOT NULL, " +
+        "id INTEGER PRIMARY KEY NOT NULL, " +
         "name VARCHAR(50), " +
         "description VARCHAR(255)," +
         "channel_type VARCHAR(20)" +
@@ -68,15 +71,16 @@ export const initDB = (callback) => {
     tx.executeSql(
       "CREATE TABLE IF NOT EXISTS Messages (" +
         "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-        "odoo_message_id INTEGER, " +
+        "odoo_message_id INTEGER UNIQUE, " +
         "channel_id INTEGER, " +
-        "user_id INTEGER, " +
+        "partner_id INTEGER, " +
+        "username VARCHAR(30), " +
         "message TEXT, " +
         "timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, " +
         "attachment_ids TEXT," +
         "status TEXT CHECK(status IN ('sent', 'received', 'pending')) DEFAULT 'pending', " +
-        "FOREIGN KEY (channel_id) REFERENCES Channels(channel_id)," +
-        "FOREIGN KEY (user_id) REFERENCES Users(user_id)" +
+        "FOREIGN KEY (channel_id) REFERENCES Channels(id)," +
+        "FOREIGN KEY (partner_id) REFERENCES Users(partner_id)" +
         ");",
       [],
       () => {
@@ -94,7 +98,7 @@ export const initDB = (callback) => {
     tx.executeSql(
       "CREATE TABLE IF NOT EXISTS Attachments (" +
         "attachment_id INTEGER PRIMARY KEY NOT NULL, " +
-        "odoo_attachment_id INTEGER, " +
+        "odoo_attachment_id INTEGER UNIQUE, " +
         "message_id INTEGER, " +
         "file_type VARCHAR(50), " +
         "file_url TEXT," +
@@ -121,13 +125,23 @@ export const insertUser = (
   partnerId,
   username,
   email,
-  profilePicture
+  profilePicture,
+  phone,
+  attendance
 ) => {
   return new Promise((resolve, reject) => {
     db.transaction((tx) => {
       tx.executeSql(
-        "INSERT INTO Users (employee_id, partner_id, username, email, profile_picture) VALUES (?, ?, ?, ?, ?);",
-        [employeeId, partnerId, username, email, profilePicture],
+        "INSERT INTO Users (employee_id, partner_id, name, email, profile_picture, mobile_phone, attendance_state) VALUES (?, ?, ?, ?, ?, ?, ?);",
+        [
+          employeeId,
+          partnerId,
+          username,
+          email,
+          profilePicture,
+          phone,
+          attendance,
+        ],
         (_, resultSet) => {
           console.log("User added successfully", resultSet);
           resolve(resultSet);
@@ -183,7 +197,7 @@ export const insertChannel = (channel_id, name, description, channel_type) => {
   return new Promise((resolve, reject) => {
     db.transaction((tx) => {
       tx.executeSql(
-        "INSERT INTO Channels (channel_id, name, description, channel_type) VALUES (?, ?, ?, ?);",
+        "INSERT INTO Channels (id, name, description, channel_type) VALUES (?, ?, ?, ?);",
         [channel_id, name, description, channel_type],
         (_, resultSet) => {
           console.log("Channel added successfully", resultSet);
@@ -219,23 +233,27 @@ export const getChannels = () => {
 export const insertMessage = (
   odoo_message_id,
   channel_id,
-  user_id,
+  partner_id,
+  username,
   message,
   timestamp,
   attachment_ids,
   status = "pending"
 ) => {
+  console.log("insertMessage called");
   return new Promise((resolve, reject) => {
     db.transaction((tx) => {
       tx.executeSql(
-        "INSERT INTO Messages (odoo_message_id, channel_id, user_id, message, timestamp, attachment_ids) VALUES (?, ?, ?, ?, ?, ?);",
+        "INSERT INTO Messages (odoo_message_id, channel_id, partner_id, username, message, timestamp, attachment_ids,status) VALUES (?, ?, ?, ?, ?, ?, ?, ?);",
         [
           odoo_message_id,
           channel_id,
-          user_id,
+          partner_id,
+          username,
           message,
           timestamp,
           attachment_ids,
+          status
         ],
         (_, resultSet) => {
           console.log("Message added successfully", resultSet);
@@ -249,14 +267,22 @@ export const insertMessage = (
     });
   });
 };
-export const getMessages = (channel_id) => {
-  db.transaction((tx) => {
-    tx.executeSql(
-      "SELECT * FROM Messages WHERE channel_id = ?;",
-      [channel_id],
-      (_, { rows }) => console.log("Messages: ", rows._array),
-      (_, error) => console.log("Error retrieving messages: ", error)
-    );
+export const getLocalMessages = (channel_id) => {
+  return new Promise((resolve, reject) => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        "SELECT * FROM Messages WHERE channel_id = ? ORDER BY timestamp DESC;", // Added ORDER BY clause
+        [channel_id],
+        (_, { rows }) => {
+          console.log("Messages: ", rows._array);
+          resolve(rows._array);
+        },
+        (_, error) => {
+          console.log("Error retrieving messages: ", error);
+          reject(error);
+        }
+      );
+    });
   });
 };
 export const insertAttachment = (
@@ -283,5 +309,23 @@ export const getAttachments = (message_id) => {
       (_, { rows }) => console.log("Attachments: ", rows._array),
       (_, error) => console.log("Error retrieving attachments: ", error)
     );
+  });
+};
+export const wipeMessagesTable = () => {
+  return new Promise((resolve, reject) => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        "DELETE FROM Messages;",
+        [],
+        (_, resultSet) => {
+          console.log("Messages table wiped successfully");
+          resolve(resultSet);
+        },
+        (_, error) => {
+          console.log("Error wiping Messages table: ", error);
+          reject(error);
+        }
+      );
+    });
   });
 };
