@@ -15,7 +15,7 @@ import {
   logoutUser,
   fetchEmployeeProfile,
   uploadFirebaseToken,
-  fetchPartnerId,
+  fetchAllEmployees,
   getDiscussChannels,
 } from "../service/authservice";
 import { AuthContext } from "../context/UserAuth";
@@ -46,12 +46,9 @@ function LoginScreen({ navigation }) {
 
       if (uid) {
         // Execute fetchEmployeeProfile and fetchPartnerId in parallel
-        const {id, name, image_1920, work_email, user_partner_id} = await fetchEmployeeProfile(uid, pin);
-        //const partnerIdPromise = fetchPartnerId(uid, pin);
-
-        // Await all promises
-        //const [{ id, name, image_1920, work_email }, partnerId] =
-          //await Promise.all([employeeProfilePromise, partnerIdPromise]);
+        const { id, name, image_1920, work_email, user_partner_id } =
+          await fetchEmployeeProfile(uid, pin);
+        const allEmployees = await fetchAllEmployees(uid, pin, id);
 
         if (id) {
           setUserId(uid);
@@ -59,33 +56,51 @@ function LoginScreen({ navigation }) {
           setPassword(pin);
           setPartnerId(user_partner_id[0]);
           // Further parallel operations
-          
+
           const uploadTokenPromise = uploadFirebaseToken(
             user_partner_id[0],
             fcmtoken,
             uid,
             pin
           );
-          const fetchChannelsPromise = getDiscussChannels(uid, user_partner_id[0]);
+          const fetchChannelsPromise = getDiscussChannels(
+            uid,
+            user_partner_id[0]
+          );
 
           // Await all promises
-          const [uploadResult, channels] = await Promise.all([
+          const [uploadResult, remoteChannels] = await Promise.all([
             uploadTokenPromise,
             fetchChannelsPromise,
           ]);
           console.log("Firebase token uploaded. Record ID:", uploadResult);
-
-          if (channels) {
-            setChannels(channels);
-            const userInsertPromise = insertUser(
-              id,
-              user_partner_id[0],
-              name,
-              work_email,
-              image_1920
+          console.log("channels retrieved and we have " + remoteChannels)
+          setChannels(remoteChannels);
+          if (remoteChannels) {
+            const userInsertPromise = allEmployees.map((employee) =>
+              insertUser(
+                employee.id,
+                employee.user_partner_id[0], // Assuming user_partner_id is an array
+                employee.name,
+                employee.work_email,
+                null,
+                employee.mobile_phone, // Or another field for profile pictures
+                employee.attendance_state
+              )
             );
-            const channelInsertPromises = channels.map((channel) =>
-              insertChannel(channel.id, channel.name, channel.description, channel.channel_type)
+
+            // Add the logged-in user to the insert operations
+            userInsertPromise.push(
+              insertUser(id, user_partner_id[0], name, work_email, image_1920)
+            );
+
+            const channelInsertPromises = remoteChannels.map((channel) =>
+              insertChannel(
+                channel.id,
+                channel.name,
+                channel.description,
+                channel.channel_type
+              )
             );
 
             // Combine all promises
