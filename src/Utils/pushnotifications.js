@@ -58,10 +58,22 @@ export const NotificationListener = (addMessage) => {
     if (remoteMessage.data) {
       const notificationData = remoteMessage.data.message_id;
       const parsedData = JSON.parse(notificationData.replace(/'/g, '"'));
+      console.log(parsedData);
+      storeMessage(parsedData,body);
       await displayMessage(parsedData);
     }
 
     /*
+     await insertMessage(
+            msg.id,
+            currentChannel.id,
+            msg.author_id[0],
+            msg.author_id[1],
+            body,
+            msg.date,
+            attachment_ids,
+            msg.author_id[0] == partnerId ? "sent" : "received"
+          );
     if (remoteMessage.notification) {
       //const { title, body } = remoteMessage.notification || {};
     
@@ -88,13 +100,14 @@ export const NotificationListener = (addMessage) => {
   });
 
   const storeMessage = async (data, message) => {
-    const { message_id, channel_id, author_id, timestamp, attachment_ids } =
+    const { message_id, channel_id, author_id, author_name,timestamp, attachment_ids } =
       data;
     try {
       await insertMessage(
-        message_id,
-        channel_id,
-        author_id,
+        parseInt(message_id, 10),
+        parseInt(channel_id, 10),
+        parseInt(author_id, 10),
+        author_name,
         message,
         timestamp,
         attachment_ids,
