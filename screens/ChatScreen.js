@@ -28,7 +28,13 @@ import {
   getServerMessages,
 } from "../service/authservice";
 import { useMessageContext } from "../context/MessageContext";
-import { getChannels, insertMessage, getMessages } from "../database";
+import {
+  getChannels,
+  insertMessage,
+  getLocalMessages,
+  wipeMessagesTable,
+  getAllMessages,
+} from "../database";
 import LottieView from "lottie-react-native";
 
 const { width, height } = Dimensions.get("window");
@@ -53,40 +59,38 @@ const ChatScreen = () => {
 
   useEffect(() => {
     const fetchAndStoreMessages = async () => {
-      const localMessages = await getMessages(currentChannel.channel_id);
-      //console.log(messages[currentChannel.channel_id]);
-      if (messages[currentChannel.channel_id] == undefined) {
-        setIsLoading(true);
+      console.log("entered the fetch and store with id " + currentChannel);
+      const localMessages = await getLocalMessages(currentChannel.id);
+     
+      if (
+        messages[currentChannel.id] === undefined &&
+        localMessages.length === 0
+      ) {
+        console.log("fetching from server");
         const serverMessages = await getServerMessages(
           userId,
-          currentChannel.channel_id,
-          20
+          currentChannel.id,
+          5
         );
 
-        console.log(serverMessages);
+        const reversedServerMessages = serverMessages.reverse();
 
-        // Store messages in SQLite
-
-        serverMessages.forEach(async (msg) => {
+        // Convert each message and store it using insertMessage
+        const insertPromises = reversedServerMessages.map(async (msg) => {
           const body = msg.body.replace(/<\/?[^>]+(>|$)/g, "");
-          console.log(body);
-          console.log(msg.author_id[1]);
-          console.log("author id " + msg.author_id[0]);
-
-          console.log(msg.date);
-          // Convert attachment_ids array to JSON string
           const attachment_ids = JSON.stringify(msg.attachment_ids || []);
+
           await insertMessage(
-            msg.id, // Use the correct property for message ID
-            currentChannel.channel_id,
+            msg.id,
+            currentChannel.id,
             msg.author_id[0],
             msg.author_id[1],
             body,
-            new Date(msg.date),
+            msg.date,
             attachment_ids,
-            msg.author_id[0] == partnerId ? "sent" : "received" // or the appropriate status
+            msg.author_id[0] == partnerId ? "sent" : "received"
           );
-      
+
           const newMessage = {
             _id: msg.id,
             text: body,
@@ -99,8 +103,33 @@ const ChatScreen = () => {
           };
 
           // Update the UI
-          addMessage(currentChannel.channel_id, [newMessage]);
+          addMessage(currentChannel.id, [newMessage]);
         });
+
+        // Wait for all insert operations to complete
+        await Promise.all(insertPromises);
+
+        setIsLoading(false);
+      } else if (
+        messages[currentChannel.id] === undefined &&
+        localMessages.length != 0
+      ) {
+        console.log("fetching from local");
+        const formattedLocalMessages = localMessages.map((msg) => ({
+          _id: msg.odoo_message_id, // or msg.id depending on which ID you want to use
+          text: msg.message,
+          createdAt: new Date(msg.timestamp),
+          user: {
+            _id: msg.partner_id,
+            name: msg.username, // Assuming this is the username
+          },
+          // Include other properties if needed
+        }));
+
+        // Update the UI with local messages
+        addMessage(currentChannel.id, formattedLocalMessages);
+        setIsLoading(false);
+      } else {
         setIsLoading(false);
       }
     };
@@ -111,13 +140,13 @@ const ChatScreen = () => {
   const onSend = async (newMessages = []) => {
     const x = await sendMessage(
       userId,
-      currentChannel.channel_id,
+      currentChannel.id,
       newMessages[0].text,
       []
     );
     console.log(x);
     console.log(newMessages);
-    addMessage(currentChannel.channel_id, newMessages);
+    addMessage(currentChannel.id, newMessages);
   };
 
   const selectChannel = (channel) => {
@@ -214,7 +243,20 @@ const ChatScreen = () => {
       />
     );
   };
-  const handleMenuButtonPressed = () => {
+  const renderTicks = (message) => {
+    // Replace with your logic to determine the message status
+    const { status } = message;
+    if (status === "read") {
+      return "✓✓"; // or your custom read icon
+    } else if (status === "delivered") {
+      return "✓✓"; // or your custom delivered icon
+    } else if (status === "sent") {
+      return "✓"; // or your custom sent icon
+    }
+    return null;
+  };
+
+  const handleMenuButtonPressed = async () => {
     setSidebarVisible(!sidebarVisible);
   };
 
@@ -230,7 +272,7 @@ const ChatScreen = () => {
           />
         </View>
       ) : (
-        <View style={{flex: 1}}>
+        <View style={{ flex: 1 }}>
           <TouchableOpacity
             style={styles.menu}
             onPress={handleMenuButtonPressed}
@@ -275,7 +317,7 @@ const ChatScreen = () => {
           >
             <View style={[styles.chatContainer]}>
               <GiftedChat
-                messages={messages[currentChannel.channel_id] || []}
+                messages={messages[currentChannel.id] || []}
                 onSend={(newMessages) => onSend(newMessages)}
                 user={{ _id: partnerId }}
                 renderSend={renderSend}
@@ -303,9 +345,9 @@ const createStyles = (theme) =>
       flexDirection: "row",
       alignItems: "center",
       zIndex: 2,
-      backgroundColor:"#F2F2F2",
-      paddingVertical:10,
-      paddingHorizontal:20
+      backgroundColor: "#F2F2F2",
+      paddingVertical: 10,
+      paddingHorizontal: 20,
     },
     currentChannel: {
       marginLeft: 20,
