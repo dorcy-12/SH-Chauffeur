@@ -52,7 +52,9 @@ export async function fetchEmployeeProfile(userId, password) {
         "hr.employee",
         "search_read",
         [[["user_id", "=", parseInt(userId, 10)]]],
-        { fields: ["id", "name", "image_1920", "work_email","user_partner_id"] }, // Adjust field names if necessary
+        {
+          fields: ["id", "name", "image_1920", "work_email", "user_partner_id"],
+        }, // Adjust field names if necessary
       ],
     },
     id: Math.floor(Math.random() * 100) + 1,
@@ -64,7 +66,7 @@ export async function fetchEmployeeProfile(userId, password) {
     console.log(employeeData);
 
     if (employeeData && employeeData.length > 0) {
-      await SecureStore.setItemAsync("employeeId",`${employeeData[0].id}`);
+      await SecureStore.setItemAsync("employeeId", `${employeeData[0].id}`);
       return employeeData[0];
     }
     return null;
@@ -78,38 +80,45 @@ export async function fetchAllEmployees(userId, password, myEmployeeId) {
   const pin = await SecureStore.getItemAsync("password");
 
   const payload = {
-      jsonrpc: "2.0",
-      method: "call",
-      params: {
-          service: "object",
-          method: "execute_kw",
-          args: [
-              DB_NAME,
-              userId,
-              pin,
-              "hr.employee",
+    jsonrpc: "2.0",
+    method: "call",
+    params: {
+      service: "object",
+      method: "execute_kw",
+      args: [
+        DB_NAME,
+        userId,
+        pin,
+        "hr.employee",
 
-              "search_read",
-              [[["id", "!=", myEmployeeId]]], // Empty array for matching all records
-              {
-                  fields: ["id", "name", "work_email","mobile_phone", "user_partner_id", "attendance_state"], // Specify the fields you want to retrieve
-                  // Include other fields if needed
-              },
-          ],
-      },
-      id: Math.floor(Math.random() * 100) + 1,
+        "search_read",
+        [[["id", "!=", myEmployeeId]]], // Empty array for matching all records
+        {
+          fields: [
+            "id",
+            "name",
+            "work_email",
+            "mobile_phone",
+            "user_partner_id",
+            "attendance_state",
+          ], // Specify the fields you want to retrieve
+          // Include other fields if needed
+        },
+      ],
+    },
+    id: Math.floor(Math.random() * 100) + 1,
   };
 
   try {
-      const response = await axios.post(url, payload);
-      const employees = response.data.result;
-      console.log("Employees successfully retrieved", employees);
-      return employees; 
+    const response = await axios.post(url, payload);
+    const employees = response.data.result;
+    console.log("Employees successfully retrieved", employees);
+    return employees;
   } catch (error) {
     console.error("Error in fetch all employees", error);
     throw error;
   }
-};
+}
 export async function fetchVehicleServices(userId, serviceState, password) {
   const url = `${BASE_URL}/jsonrpc`;
   console.log(userId);
@@ -476,10 +485,15 @@ export async function getServerMessages(userId, channel_id, limit) {
         pin,
         "mail.message",
         "search_read",
-        [[["res_id", "=", channel_id],["model", "=", "mail.channel"]]],
+        [
+          [
+            ["res_id", "=", channel_id],
+            ["model", "=", "mail.channel"],
+          ],
+        ],
         {
-          fields:["id","body", "date", "author_id", "attachment_ids"],
-          limit:limit
+          fields: ["id", "body", "date", "author_id", "attachment_ids"],
+          limit: limit,
         },
       ],
     },
@@ -572,6 +586,43 @@ export async function uploadAttachment(
     return result; // Returns the ID of the created record
   } catch (error) {
     console.error("Error in uploading attachment", error);
+    throw error;
+  }
+}
+
+export async function fetchVehicles(userId) {
+  const url = `${BASE_URL}/jsonrpc`;
+  const pin = await SecureStore.getItemAsync("password");
+
+  const payload = {
+    jsonrpc: "2.0",
+    method: "call",
+    params: {
+      service: "object",
+      method: "execute_kw",
+      args: [
+        DB_NAME,
+        userId,
+        pin,
+        "fleet.vehicle",
+        "search_read",
+        [[]], // Empty array for matching all records
+        {
+          fields: ["id", "name", "description", "license_plate"], // Specify the fields you want to retrieve
+
+        },
+      ],
+    },
+    id: Math.floor(Math.random() * 100) + 1,
+  };
+
+  try {
+    const response = await axios.post(url, payload);
+    const Vehicles = response.data.result;
+    console.log("Vehicles successfully retrieved", Vehicles);
+    return Vehicles;
+  } catch (error) {
+    console.error("Error in fetch Vehicles", error);
     throw error;
   }
 }

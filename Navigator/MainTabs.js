@@ -2,8 +2,10 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import HomeScreen from "../screens/home";
 import ProfileScreen from "../screens/profile";
 import DocumentsScreen from "../screens/documents";
+import AdminHomeScreen from "../screens/AdminHomeScreen";
+import FleetPlanScreen from "../screens/FleetPlanScreen";
 import ChatScreen from "../screens/ChatScreen";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
 const Tab = createBottomTabNavigator();
 
@@ -21,7 +23,7 @@ function MainTabs() {
     >
       <Tab.Screen
         name="home"
-        component={HomeScreen}
+        component={AdminHomeScreen}
         options={{
           headerShown: false,
           tabBarLabel: "Home",
@@ -73,6 +75,28 @@ function MainTabs() {
             return (
               <Ionicons
                 name="time"
+                color={color}
+                size={focused ? size : iconSize}
+                focused
+              />
+            );
+          },
+        }}
+      />
+
+      <Tab.Screen
+        name="planner"
+        component={FleetPlanScreen}
+        options={{
+          headerShown: false,
+          tabBarLabel: "Planner",
+          tabBarIcon: ({ focused, color, size }) => {
+            // Reduce the size of the icons
+            const iconSize = size * 0.8; // Adjust the factor to make icons smaller
+            // Return the icon component
+            return (
+              <FontAwesome
+                name="calendar"
                 color={color}
                 size={focused ? size : iconSize}
                 focused

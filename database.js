@@ -4,7 +4,7 @@ const db = SQLite.openDatabase("MyDatabase.db");
 
 // Call the function to ensure the table is created
 export const initDB = (callback) => {
-  let tableCount = 4; // Total number of tables to create
+  let tableCount = 5; // Total number of tables to create
   let createdTables = 0;
 
   const checkAllTablesCreated = () => {
@@ -90,6 +90,26 @@ export const initDB = (callback) => {
       (_, error) => {
         tableCreationFailed(error);
         console.log("Error creating Messages table: " + error);
+      }
+    );
+  });
+
+  db.transaction((tx) => {
+    tx.executeSql(
+      "CREATE TABLE IF NOT EXISTS Cars (" +
+        "id INTEGER PRIMARY KEY NOT NULL, " +
+        "name VARCHAR(100), " +
+        "description VARCHAR(255), " +
+        "license_plate VARCHAR(20) " +
+        ");",
+      [],
+      () => {
+        tableCreated();
+        console.log("Cars table created successfully");
+      },
+      (_, error) => {
+        tableCreationFailed(error);
+        console.log("Error creating Cars table: " + error);
       }
     );
   });
@@ -197,9 +217,9 @@ export const getUserCounts = () => {
     db.transaction((tx) => {
       tx.executeSql(
         "SELECT " +
-        "(SELECT COUNT(*) FROM Users) as totalEmployees, " +
-        "(SELECT COUNT(*) FROM Users WHERE attendance_state = 'checked_in') as activeEmployees, " +
-        "(SELECT COUNT(*) FROM Users WHERE attendance_state = 'checked_out') as inactiveEmployees;",
+          "(SELECT COUNT(*) FROM Users) as totalEmployees, " +
+          "(SELECT COUNT(*) FROM Users WHERE attendance_state = 'checked_in') as activeEmployees, " +
+          "(SELECT COUNT(*) FROM Users WHERE attendance_state = 'checked_out') as inactiveEmployees;",
         [],
         (_, { rows }) => {
           resolve(rows._array.length > 0 ? rows._array[0] : null);
@@ -211,7 +231,6 @@ export const getUserCounts = () => {
     });
   });
 };
-
 
 export const insertChannel = (channel_id, name, description, channel_type) => {
   return new Promise((resolve, reject) => {
@@ -273,7 +292,7 @@ export const insertMessage = (
           message,
           timestamp,
           attachment_ids,
-          status
+          status,
         ],
         (_, resultSet) => {
           console.log("Message added successfully", resultSet);
@@ -343,6 +362,43 @@ export const wipeMessagesTable = () => {
         },
         (_, error) => {
           console.log("Error wiping Messages table: ", error);
+          reject(error);
+        }
+      );
+    });
+  });
+};
+export const insertCar = (car_id, name, description, license_plate) => {
+  return new Promise((resolve, reject) => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        "INSERT INTO Cars (id, name, description, license_plate) VALUES (?, ?, ?, ?);",
+        [car_id, name, description, license_plate],
+        (_, resultSet) => {
+          console.log("Car added successfully", resultSet);
+          resolve(resultSet);
+        },
+        (_, error) => {
+          console.log("Error adding car: ", error);
+          reject(error);
+        }
+      );
+    });
+  });
+};
+
+export const getCars = () => {
+  return new Promise((resolve, reject) => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        "SELECT * FROM Cars;",
+        [],
+        (_, { rows }) => {
+          console.log("Cars: ", rows._array);
+          resolve(rows._array.length > 0 ? rows._array : null);
+        },
+        (_, error) => {
+          console.log("Error retrieving cars: ", error);
           reject(error);
         }
       );
