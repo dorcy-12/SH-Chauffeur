@@ -6,6 +6,8 @@ import ServiceDetailScreen from "../screens/ServiceDetailScreen";
 import DrivingTimerScreen from "../screens/DrivingTimerScreen";
 import JourneyDetailsScreen from "../screens/JourneyDetails";
 import ServiceDetailCard from "../Components/ServiceDetailCard";
+import AdminHomeScreen from "../screens/EmployeeListScreen";
+import EmployeeListScreen from "../screens/EmployeeListScreen";
 
 const Stack = createStackNavigator();
 
@@ -30,6 +32,11 @@ function StackNavigator() {
       <Stack.Screen
         name="Journey"
         component={JourneyDetailsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="employeeList"
+        component={EmployeeListScreen}
         options={{ headerShown: false }}
       />
     
