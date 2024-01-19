@@ -1,8 +1,7 @@
 import xmlrpc.client
 import base64
 from datetime import datetime
-dorcypw = "amatama"
-dorcy = "h.dorcy@sh-personal.com"
+
 
 #context = ssl.create_default_context(cafile=certifi.where())
 #info = xmlrpc.client.ServerProxy('https://demo.odoo.com/start', context = context).start()
@@ -129,11 +128,11 @@ def getpartners():
     )
     for response in responses:
         print(response)
-#getpartners()
+getpartners()
 def getchannels():
     responses = models.execute_kw(db, uid, password,
                                  'mail.channel', 'search_read',
-                                 [[['channel_partner_ids', 'in', 3]]],
+                                 [[]],
                                  { 'fields': ['name', 'description', 'channel_type', 'public']})
     for response in responses:
         print(response)
