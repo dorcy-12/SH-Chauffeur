@@ -9,8 +9,8 @@ from datetime import datetime
 
 url = "http://217.160.15.116"
 db = "default_xnqp1odoo"
-username = dorcy
-password = dorcypw
+username = admin
+password = adminpw
 
 common = xmlrpc.client.ServerProxy('{}/xmlrpc/2/common'.format(url))
 uid = common.authenticate(db, username, password, {})
@@ -24,20 +24,25 @@ def get_all_employees():
         db, uid, password,
         'hr.employee', 'search_read',
         [[]],  # Empty list for search domain to get all records
-        { 'fields': [],'limit':2}  # Fields you want to fetch, such as 'id' and 'name'
+        {'fields': [],'limit':1}  # Fields you want to fetch, such as 'id' and 'name'
     )
 
     for employee in employees:
-        print(employee)
-#
-get_all_employees()
-
+        print(f"Employee ID: {employee}")
+"""
+#get_all_employees()
+id name image partner_id attendance_state
 #models_list = models.execute_kw(
 #    db, uid, password,
 #    'ir.model', 'search_read',
 #    [[]],
 #   {'fields': ['model']}
-#)
+        
+# 
+{'id': 2, 'partner_id': [3, 'Administrator']}
+{'id': 8, 'partner_id': [12, 'Dorcy Agape Hakizimana']}
+{'id': 9, 'partner_id': [13, 'frank kukiki']}
+"""
 
 #get_all_employees()
 
@@ -128,12 +133,12 @@ def getpartners():
     )
     for response in responses:
         print(response)
-getpartners()
+#getpartners()
 def getchannels():
     responses = models.execute_kw(db, uid, password,
                                  'mail.channel', 'search_read',
-                                 [[]],
-                                 { 'fields': ['name', 'description', 'channel_type', 'public']})
+                                 [[('id','=', 5)]],
+                                 { 'fields': []})
     for response in responses:
         print(response)
 #getchannels()
@@ -150,8 +155,8 @@ def sendMessage(msg, id):
 def getMessages(id):
     messages =  models.execute_kw(db, uid, password,
                 'mail.message', 'search_read',
-                [[('res_id', '=', id), ('model', '=', 'mail.channel')]],  # Filter for the specific channel
-                {'limit': 10})  # Fields you want to retrieve
+                [[('res_id', '=', id),("model", "=", "mail.channel")]],  # Filter for the specific channel
+                {'limit':1})  # Fields you want to retrieve
 
     # Print the retrieved messages
     print(messages)
@@ -210,3 +215,19 @@ def sendAttachment(channel_id):
     print(f"Message sent with attachment ID {767}")
 
 #sendAttachment(5)
+"""
+Channels:  [{"channel_id": 1, "channel_type": "channel", "description": "General announcements for all employees.", "name": "general"}, {"channel_id": 2, "channel_type": "chat", "description": "0", "name": "OdooBot, Administrator"}, {"channel_id": 5, "channel_type": "chat", "description": "0", "name": "Dorcy Agape Hakizimana, Administrator"}, {"channel_id": 7, "channel_type": "channel", "description": "0", "name": "coomm"}, {"channel_id": 8, "channel_type": "chat", "description": "0", "name": "frank kukiki, Administrator"}, {"channel_id": 11, "channel_type": "channel", "description": "0", "name": "like"}]
+  [{"channel_id": 1, "channel_type": "channel", "description": "General announcements for all employees.", "name": "general"}, {"channel_id": 2, "channel_type": "chat", "description": "0", "name": "OdooBot, Administrator"}, {"channel_id": 5, "channel_type": "chat", "description": "0", "name": "Dorcy Agape Hakizimana, Administrator"}, {"channel_id": 7, "channel_type": "channel", "description": "0", "name": "coomm"}, {"channel_id": 8, "channel_type": "chat", "description": "0", "name": "frank kukiki, Administrator"}, {"channel_id": 11, "channel_type": "channel", "description": "0", "name": "like"}]
+  """
+
+
+def fetch_employee_work_hours(employee_id):
+    # Common URL for XML-RPC
+    work_hours_data = models.execute_kw(
+            db, uid, password,
+            'hr.attendance', 'search_read',  # Model
+            [[]],  # Filter by employee ID
+            {'fields': ['employee_id', 'check_in', 'check_out','worked_hours']}     # Fields to retrieve
+        )
+    return work_hours_data
+print(fetch_employee_work_hours(1))

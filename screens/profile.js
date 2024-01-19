@@ -14,7 +14,7 @@ import { AuthContext } from "../context/UserAuth";
 import { deleteUserFirebaseTokens } from "../service/authservice";
 import * as SecureStore from "expo-secure-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getUserProfile, getUsers } from "../database";
+import { getUserProfile, getUsers, wipeMessagesTable, getLocalMessages } from "../database";
 
 const ProfileScreen = ({ navigation }) => {
   const theme = useTheme();
@@ -22,6 +22,7 @@ const ProfileScreen = ({ navigation }) => {
   const {
     setIsUserLoggedIn,
     userId,
+    channels,
     password,
     setUserId,
     setEmployeeId,
@@ -30,6 +31,10 @@ const ProfileScreen = ({ navigation }) => {
   } = useContext(AuthContext);
 
   const handleLogout = async () => {
+    //await wipeMessagesTable();
+    const localMessages = await getUsers();
+    console.log(localMessages)
+    /*
     await deleteUserFirebaseTokens("userId");
     await SecureStore.deleteItemAsync("userId");
     await SecureStore.deleteItemAsync("password");
@@ -41,6 +46,7 @@ const ProfileScreen = ({ navigation }) => {
     setPassword(null);
     setIsUserLoggedIn(false);
     // Clear other sensitive data as needed
+    */
   };
 
   const [profileData, setProfileData] = useState({
