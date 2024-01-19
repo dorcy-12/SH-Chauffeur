@@ -1,7 +1,8 @@
 import xmlrpc.client
 import base64
 from datetime import datetime
-
+dorcypw = "amatama"
+dorcy = "h.dorcy@sh-personal.com"
 
 #context = ssl.create_default_context(cafile=certifi.where())
 #info = xmlrpc.client.ServerProxy('https://demo.odoo.com/start', context = context).start()
@@ -24,13 +25,13 @@ def get_all_employees():
         db, uid, password,
         'hr.employee', 'search_read',
         [[]],  # Empty list for search domain to get all records
-        {'fields': ['id', 'name']}  # Fields you want to fetch, such as 'id' and 'name'
+        { 'fields': [],'limit':2}  # Fields you want to fetch, such as 'id' and 'name'
     )
 
     for employee in employees:
-        print(f"Employee ID: {employee['id']}, Name: {employee['name']}")
+        print(employee)
 #
-#get_all_employees()
+get_all_employees()
 
 #models_list = models.execute_kw(
 #    db, uid, password,
@@ -136,7 +137,7 @@ def getchannels():
                                  { 'fields': ['name', 'description', 'channel_type', 'public']})
     for response in responses:
         print(response)
-getchannels()
+#getchannels()
 
 def sendMessage(msg, id):
     response = models.execute_kw(db, uid, password,
@@ -151,12 +152,12 @@ def getMessages(id):
     messages =  models.execute_kw(db, uid, password,
                 'mail.message', 'search_read',
                 [[('res_id', '=', id), ('model', '=', 'mail.channel')]],  # Filter for the specific channel
-                {'fields': ['body', 'date', 'author_id', 'attachment_ids'],'limit': 10})  # Fields you want to retrieve
+                {'limit': 10})  # Fields you want to retrieve
 
     # Print the retrieved messages
     print(messages)
 
-#cleagetMessages(5)
+#getMessages(5)
 
 def downloadAttachment(attachment_id):
     attachment = models.execute_kw(db, uid, password,
