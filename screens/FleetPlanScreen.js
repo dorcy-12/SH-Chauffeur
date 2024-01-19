@@ -17,8 +17,10 @@ import { useTheme } from "../context/ThemeContext";
 import { AuthContext } from "../context/UserAuth";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { getCars, insertCar, getUsers } from "../database";
-import { fetchVehicles } from "../service/authservice";
+import { fetchVehicles, fetchVehicleServices } from "../service/authservice";
 import LottieView from "lottie-react-native";
+import { Picker } from "@react-native-picker/picker";
+
 function FleetPlanScreen({ navigation }) {
   const theme = useTheme();
   const styles = createStyles(theme);
@@ -45,9 +47,9 @@ function FleetPlanScreen({ navigation }) {
     description: "",
     car: "",
   });
+  const [services, setServices] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  
-  
+
   useEffect(() => {
     const fetchAndStoreVehicles = async () => {
       const localCars = await getCars();
@@ -79,6 +81,43 @@ function FleetPlanScreen({ navigation }) {
     };
     fetchAndStoreVehicles().catch(console.error);
   }, []);
+  useEffect(() => {
+  
+    PushNotification.createChannel(
+      {
+        channelId: "timer-channel", // (required)
+        channelName: "Timer Channel", // (required)
+        channelDescription: "A channel for timer notifications", // (optional) default: undefined.
+        vibrate: false,
+        sound: true,
+        onlyAlertOnce: true,
+      },
+      (created) => console.log(`createChannel returned '${created}'`) // (optional) callback returns whether the channel was created, false means it already existed.
+    );
+  }, []);
+  const loadServices = async () => {
+    setIsLoading(true);
+    try {
+      // Assuming vehicleId is available or retrieved from context/user input
+      const fetchedServices = await fetchVehicleServices(
+        userId,
+        "todo",
+        password
+      );
+
+      console.log("the user " + userId);
+      setServices(fetchedServices);
+      console.log("fetched services" + fetchedServices);
+    } catch (error) {
+      console.error("Error loading services:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  useEffect(() => {
+    loadServices();
+  }, []);
+
 
   // Function to navigate to add plan screen
   const navigateToAddPlan = () => {
@@ -150,16 +189,32 @@ function FleetPlanScreen({ navigation }) {
             <View style={styles.modalContainer}>
               <View style={styles.modalView}>
                 <Text style={styles.modalTitle}>Neuen Plan Erstellen</Text>
-                <TextInput
-                  placeholder="Fahrer"
-                  style={styles.textInput}
-                  // other props
-                />
-                <TextInput
-                  placeholder="Auto"
-                  style={styles.textInput}
-                  // other props
-                />
+                <Picker
+                  selectedValue={newPlan.driver}
+                  onValueChange={(itemValue, itemIndex) =>
+                    handleInputChange("driver", itemValue)
+                  }
+                  style={styles.picker}
+                >
+                  {Object.values(employees).map((employee) => (
+                    <Picker.Item
+                      label={employee.name}
+                      value={employee.employee_id}
+                      key={employee.employee_id}
+                    />
+                  ))}
+                </Picker>
+                <Picker
+                  selectedValue={newPlan.car}
+                  onValueChange={(itemValue, itemIndex) =>
+                    handleInputChange("car", itemValue)
+                  }
+                  style={styles.picker}
+                >
+                  {Object.values(cars).map((car) => (
+                    <Picker.Item label={car.name} value={car.id} key={car.id} />
+                  ))}
+                </Picker>
                 <TextInput
                   placeholder="Beschreibung"
                   style={[styles.textInput, styles.descriptionInput]} // Updated style
@@ -230,67 +285,17 @@ const createStyles = (theme) =>
     container: {
       flex: 1,
       backgroundColor: "#fff",
-
       paddingTop: Platform.OS == "android" ? StatusBar.currentHeight : 0,
       paddingHorizontal: 10,
     },
-    title: {
-      fontSize: 24,
-      fontWeight: "bold",
-      textAlign: "center",
-      marginVertical: 15,
-    },
-    searchBar: {
-      flexDirection: "row",
-      marginVertical: 30,
-      paddingVertical: 10,
-      paddingHorizontal: 20,
-      borderWidth: 1,
-      borderColor: "#ddd",
-      borderRadius: 10,
-      alignItems: "center",
-    },
-    searchInput: {
-      fontSize: 16,
-      marginLeft: 10,
-    },
-    fleetItem: {
-      backgroundColor: "white",
-      overflow: "hidden",
-      marginVertical: 8,
-      marginHorizontal: 10,
-      borderRadius: 10,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 3,
-    },
-    itemText: {
-      fontSize: 16,
-      marginBottom: 5,
-    },
-    addButton: {
-      position: "absolute",
-      bottom: 20,
-      right: 20,
-    },
-    header: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      backgroundColor: theme.primary,
-      paddingVertical: 10,
-      paddingHorizontal: 20,
-    },
-    body: {
-      paddingHorizontal: 20,
-      paddingVertical: 10,
-    },
-    modalContainer: {
+    loadingContainer: {
       flex: 1,
       justifyContent: "center",
       alignItems: "center",
-      backgroundColor: "rgba(0, 0, 0, 0.5)",
+    },
+    lottieAnimation: {
+      width: 200, // Set the size as needed
+      height: 200, // Set the size as needed
     },
     modalView: {
       backgroundColor: "white",
@@ -312,6 +317,15 @@ const createStyles = (theme) =>
       fontWeight: "bold",
       marginBottom: 15,
     },
+    picker: {
+      width: "100%",
+      padding: 10,
+      marginVertical: 8,
+      borderWidth: 1,
+      borderColor: "#ddd",
+      borderRadius: 5,
+      backgroundColor: "#f9f9f9",
+    },
     textInput: {
       width: "100%",
       padding: 10,
@@ -320,6 +334,9 @@ const createStyles = (theme) =>
       borderColor: "#ddd",
       borderRadius: 5,
       backgroundColor: "#f9f9f9",
+    },
+    descriptionInput: {
+      height: 100, // Increased height
     },
     submitButton: {
       backgroundColor: theme.primary,
@@ -334,9 +351,6 @@ const createStyles = (theme) =>
       fontWeight: "bold",
       color: "white",
     },
-    descriptionInput: {
-      height: 100, // Increased height
-    },
     datePickerButton: {
       padding: 10,
       marginVertical: 10,
@@ -344,14 +358,64 @@ const createStyles = (theme) =>
       borderRadius: 5,
       alignItems: "center",
     },
-    loadingContainer: {
+    title: {
+      fontSize: 24,
+      fontWeight: "bold",
+      textAlign: "center",
+      marginVertical: 15,
+    },
+    searchBar: {
+      flexDirection: "row",
+      marginVertical: 30,
+      paddingVertical: 10,
+      paddingHorizontal: 20,
+      borderWidth: 1,
+      borderColor: "#ddd",
+      borderRadius: 10,
+      alignItems: "center",
+    },
+    searchInput: {
+      fontSize: 16,
+      marginLeft: 10,
+    },
+    addButton: {
+      position: "absolute",
+      bottom: 20,
+      right: 20,
+    },
+    fleetItem: {
+      backgroundColor: "white",
+      overflow: "hidden",
+      marginVertical: 8,
+      marginHorizontal: 10,
+      borderRadius: 10,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    itemText: {
+      fontSize: 16,
+      marginBottom: 5,
+    },
+
+    header: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      backgroundColor: theme.primary,
+      paddingVertical: 10,
+      paddingHorizontal: 20,
+    },
+    body: {
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+    },
+    modalContainer: {
       flex: 1,
       justifyContent: "center",
       alignItems: "center",
-    },
-    lottieAnimation: {
-      width: 200, // Set the size as needed
-      height: 200, // Set the size as needed
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
     },
   });
 

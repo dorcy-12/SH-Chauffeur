@@ -7,7 +7,6 @@ import FleetPlanScreen from "../screens/FleetPlanScreen";
 import ChatScreen from "../screens/ChatScreen";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
-import AdminHomeScreen from "../screens/AdminHomeScreen";
 const Tab = createBottomTabNavigator();
 
 function MainTabs() {
