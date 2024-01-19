@@ -58,7 +58,7 @@ const ProfileScreen = ({ navigation }) => {
         
         if (userProfile) {
           setProfileData({
-            name: userProfile.username,
+            name: userProfile.name,
             imageUri: `data:image/png;base64,${userProfile.profile_picture}`,
             email: userProfile.email,
           });

@@ -68,7 +68,7 @@ function EmployeeListScreen({route, navigation}) {
     if (status === "checked_in") {
       return <Fontisto name="radio-btn-active" size={18} color="green" />;
     } else if (status === "checked_out") {
-      return <Fontisto name="radio-btn-active" size={18} color="grey" />;
+      return <Fontisto name="radio-btn-active" size={18} color="red" />;
     } else {
       return null;
     }

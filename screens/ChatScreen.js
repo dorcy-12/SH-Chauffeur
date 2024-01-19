@@ -61,7 +61,7 @@ const ChatScreen = () => {
     const fetchAndStoreMessages = async () => {
       console.log("entered the fetch and store with id " + currentChannel);
       const localMessages = await getLocalMessages(currentChannel.id);
-     
+
       if (
         messages[currentChannel.id] === undefined &&
         localMessages.length === 0
@@ -138,6 +138,7 @@ const ChatScreen = () => {
   }, [currentChannel]);
 
   const onSend = async (newMessages = []) => {
+    addMessage(currentChannel.id, newMessages);
     const x = await sendMessage(
       userId,
       currentChannel.id,
@@ -146,7 +147,6 @@ const ChatScreen = () => {
     );
     console.log(x);
     console.log(newMessages);
-    addMessage(currentChannel.id, newMessages);
   };
 
   const selectChannel = (channel) => {
