@@ -15,14 +15,22 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "runtimeVersion": {
+        "policy": "appVersion"
+      },
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/logo.jpg",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.dorcy.SHChauffer"
+      "package": "com.dorcy.SHChauffer",
+      "runtimeVersion": "1.0.0"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -31,6 +39,9 @@
       "eas": {
         "projectId": "6ca71a19-d2e8-4716-84a0-9a623e4e0fc4"
       }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/6ca71a19-d2e8-4716-84a0-9a623e4e0fc4"
     }
   }
 }

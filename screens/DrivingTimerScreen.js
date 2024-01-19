@@ -1,176 +1,153 @@
-import React, { useCallback, useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
-import BackgroundTimer from "react-native-background-timer";
+import React, { useEffect, useContext } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  BackHandler,
+} from "react-native";
 import PushNotification from "react-native-push-notification";
+import LottieView from "lottie-react-native";
+import { useService } from "../context/ServiceContext";
+import {
+  createEmployeeCheckOut,
+  changeServiceState,
+} from "../service/authservice";
+import { AuthContext } from "../context/UserAuth";
 
-function DrivingTimerScreen({navigation}) {
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [isActive, setIsActive] = useState(false);
-  const [distance, setDistance] = useState(0);
-  const [startLocation, setStartLocation] = useState("Unknown");
-  const [endLocation, setEndLocation] = useState("Unknown");
-
-  const preventNavigationIfTimerIsActive = useCallback(
-    (e) => {
-      if (isActive) {
-        e.preventDefault();
-
-        // Optionally show an alert to inform the user
-        Alert.alert(
-          'Timer is running',
-          'You cannot navigate away while the timer is active.',
-          [{ text: 'OK' }]
-        );
-      }
-    },
-    [isActive]
-  );
+function DrivingTimerScreen({ navigation, route }) {
+  const { userId, password, setShouldReloadServices } = useContext(AuthContext);
 
   useEffect(() => {
-    const unsubscribe = navigation.addListener('beforeRemove', preventNavigationIfTimerIsActive);
-
-    return unsubscribe;
-  }, [navigation, preventNavigationIfTimerIsActive]);
-
-  useEffect(() => {
-    let interval;
-    if (isActive) {
-      // Call the notification function only once when the timer starts
-      updateNotification();
-      interval = BackgroundTimer.setInterval(() => {
-        setElapsedSeconds(prevSeconds => prevSeconds + 1);
-      }, 1000);
-    } else {
-      BackgroundTimer.clearInterval(interval);
-    }
-    return () => BackgroundTimer.clearInterval(interval);
-  }, [isActive]);
-
-  useEffect(() => {
-    PushNotification.createChannel(
-      {
-        channelId: "timer-channel", // (required)
-        channelName: "Timer Channel", // (required)
-        channelDescription: "A channel for timer notifications", // (optional) default: undefined.
-        vibrate:false,
-        sound:true,
-        onlyAlertOnce: true,
-        
-        
-      },
-      (created) => console.log(`createChannel returned '${created}'`) // (optional) callback returns whether the channel was created, false means it already existed.
-    );
-  }, []);
-
-  const formatTime = (seconds) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const remainingSeconds = seconds % 60;
-
-    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
-      2,
-      "0"
-    )}:${String(remainingSeconds).padStart(2, "0")}`;
-  };
-
-  const updateNotification = () => {
     PushNotification.localNotification({
       channelId: "timer-channel",
       id: 1,
-      message: `Timer läuft`,
+      message: `You are driving`,
       playSound: true,
-      soundName: 'default',
+      soundName: "default",
       ongoing: true,
       // Other notification options...
     });
 
+    // Custom back handler
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => true // Return true to disable back button
+    );
+
+    return () => backHandler.remove();
+  }, []);
+
+  const confirmAndNavigate = (action, state) => {
+    Alert.alert(
+      `Fertig!`,
+      `Ihre Fahrt jetzt ${action.toLowerCase()}?`,
+      [
+        {
+          text: "Nein",
+          onPress: () => console.log("Cancel Pressed"),
+          style: "cancel",
+        },
+        {
+          text: "Ja",
+          onPress: async () => {
+            // Perform check-out here
+            const checkOutId = await createEmployeeCheckOut(
+              route.params?.checkinId,
+              userId,
+              password
+            );
+            const changeState = await changeServiceState(
+              userId,
+              route.params?.serviceId,
+              state,
+              password
+            );
+            setShouldReloadServices(true);
+            PushNotification.cancelLocalNotification({id: '1'});
+            console.log("Check-out ID:", checkOutId);
+            console.log("change")
+            // Navigate after successful check-out
+            navigation.navigate("Main");
+          },
+        },
+      ]
+    );
   };
 
-  const startTimer = () => {
-    setIsActive(true);
-    console.log('we started')
-    console.log('we reached here')
+  const cancelDriving = () => {
+    confirmAndNavigate("Stornieren", "cancelled");
   };
 
-  const pauseTimer = () => {
-    setIsActive(false);
-    PushNotification.localNotification({
-      channelId: "timer-channel",
-      id: 1,
-      message: `Timer paused`,
-      playSound: true,
-      soundName: "default"
-      
-      // Other notification options...
-    });
-  };
-
-  const stopTimer = () => {
-    setIsActive(false);
-    setElapsedSeconds(0);
-    PushNotification.cancelLocalNotification({ id: 1 });
+  const stopDriving = () => {
+    confirmAndNavigate("Beenden","done");
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.timerWrapper}>
-        <Text style={styles.timerText}>{formatTime(elapsedSeconds)}</Text>
-      </View>
-      <View style={styles.infoContainer}>
-        <Text style={styles.infoText}>Start: {startLocation}</Text>
-        <Text style={styles.infoText}>End: {endLocation}</Text>
-        <Text style={styles.infoText}>Distance: {distance} km</Text>
+      <View style={styles.animationWrapper}>
+        {/* Lottie Animation */}
+        <LottieView
+          source={require("../assets/Animation - 1699361565106.json")} // Adjust the path to your Lottie file
+          autoPlay
+          loop
+        />
       </View>
       <View style={styles.buttonWrapper}>
-        <TouchableOpacity style={styles.button} onPress={() => (isActive ? pauseTimer() : startTimer())}>
-          <Text style={styles.buttonText}>{isActive ? 'Pause' : 'Start'}</Text>
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: "orange" }]}
+          onPress={cancelDriving}
+        >
+          <Text style={styles.buttonText}>Cancel</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.button, {backgroundColor:"red"}]} onPress={stopTimer}>
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: "red" }]}
+          onPress={stopDriving}
+        >
           <Text style={styles.buttonText}>Stop</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F2F2F2',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#F2F2F2",
+    alignItems: "center",
+    justifyContent: "center",
   },
-  timerWrapper: {
+  animationWrapper: {
+    width: 300, // Adjust size as needed
+    height: 300, // Adjust size as needed
     marginBottom: 40,
-  },
-  timerText: {
-    fontSize: 72,
-    color: '#333333',
   },
   infoContainer: {
     marginBottom: 20,
   },
   infoText: {
     fontSize: 18,
-    color: '#333333',
+    color: "#333333",
     marginBottom: 10,
   },
   buttonWrapper: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
+    flexDirection: "row",
+    justifyContent: "space-around",
+    width: "100%",
     paddingHorizontal: 40,
   },
   button: {
-    backgroundColor: '#333333',
+    backgroundColor: "#333333",
     borderRadius: 25,
     width: 100,
     height: 100,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 18,
   },
 });
