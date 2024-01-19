@@ -10,12 +10,16 @@ import {
   StatusBar,
   TouchableOpacity,
   FlatList,
+  Modal,
+  TextInput,
 } from "react-native";
 import Card from "../Components/Card";
 import { useTheme } from "../context/ThemeContext";
 import * as SecureStore from "expo-secure-store";
 import LottieView from "lottie-react-native";
 import PushNotification from "react-native-push-notification";
+import DateTimePicker from "@react-native-community/datetimepicker";
+
 import {
   Ionicons,
   MaterialIcons,
@@ -33,7 +37,9 @@ function AdminHomeScreen({ navigation }) {
     inactiveEmployees: 0,
   });
   const [isLoading, setIsLoading] = useState(false);
-
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [mode, setMode] = useState("date");
   useEffect(() => {
     setIsLoading(true);
     getUserCounts()
@@ -48,9 +54,64 @@ function AdminHomeScreen({ navigation }) {
         setIsLoading(false); // Stop loading
       });
   }, []);
+  const toggleModal = () => {
+    setIsModalVisible(!isModalVisible);
+  };
+  const onDateChange = (event, date) => {
+    setSelectedDate(date || selectedDate);
+  };
+  const showDatePicker = () => {
+    setMode("date");
+  };
+
+  const showTimePicker = () => {
+    setMode("time");
+  };
 
   return (
     <SafeAreaView style={styles.container}>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isModalVisible}
+        onRequestClose={toggleModal}
+      >
+        <View style={styles.modalView}>
+          <TextInput placeholder="Car" style={styles.textInput} />
+          <TextInput placeholder="Driver Name" style={styles.textInput} />
+          <TextInput
+            placeholder="Description"
+            style={styles.textInput}
+            multiline
+          />
+          <TouchableOpacity
+            onPress={showDatePicker}
+            style={styles.datePickerButton}
+          >
+            <Text>Select Date</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={showTimePicker}
+            style={styles.datePickerButton}
+          >
+            <Text>Select Time</Text>
+          </TouchableOpacity>
+          {mode && (
+            <DateTimePicker
+              value={selectedDate}
+              mode={mode}
+              is24Hour={true}
+              display="default"
+              onChange={(event, date) => {
+                setMode(null); // Hide picker after selection
+                setSelectedDate(date || selectedDate);
+              }}
+            />
+          )}
+          <Button title="Create Plan" />
+        </View>
+      </Modal>
+
       <Text style={styles.greetings}>Willkommen,</Text>
       <View style={styles.row}>
         <TouchableOpacity
@@ -58,7 +119,7 @@ function AdminHomeScreen({ navigation }) {
           onPress={() => navigation.navigate("employeeList")}
         >
           <View style={styles.header}>
-            <Text style={styles.headerTitle}>Total Employees</Text>
+            <Text style={styles.headerTitle}>Alle Mitarbeiter</Text>
             <MaterialIcons name="people-outline" size={20} color="black" />
           </View>
           {isLoading ? (
@@ -83,7 +144,7 @@ function AdminHomeScreen({ navigation }) {
           }
         >
           <View style={styles.header}>
-            <Text style={styles.headerTitle}>Active Employees</Text>
+            <Text style={styles.headerTitle}>Active Mitarbeiter</Text>
             <Fontisto name="radio-btn-active" size={20} color="green" />
           </View>
           {isLoading ? (
@@ -110,7 +171,7 @@ function AdminHomeScreen({ navigation }) {
           }
         >
           <View style={styles.header}>
-            <Text style={styles.headerTitle}>Inactive Employees</Text>
+            <Text style={styles.headerTitle}>Inactive Mitarbeiter</Text>
             <Fontisto name="radio-btn-active" size={20} color="red" />
           </View>
           {isLoading ? (
@@ -130,7 +191,7 @@ function AdminHomeScreen({ navigation }) {
         </TouchableOpacity>
         <TouchableOpacity style={styles.card}>
           <View style={styles.header}>
-            <Text style={styles.headerTitle}>Hours Worked</Text>
+            <Text style={styles.headerTitle}>Arbeit Stunden</Text>
             <AntDesign name="clockcircleo" size={20} color="black" />
           </View>
           {isLoading ? (
@@ -147,6 +208,9 @@ function AdminHomeScreen({ navigation }) {
           )}
         </TouchableOpacity>
       </View>
+      <TouchableOpacity onPress={toggleModal}>
+        <AntDesign name="pluscircle" size={50} color="black" />
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -187,11 +251,14 @@ const createStyles = (theme) =>
       shadowOpacity: 0.1,
       shadowRadius: 4,
       elevation: 3, // Elevation for Android
+      flexDirection: "column",
+      justifyContent: "space-between",
     },
     description: {
       fontSize: 30, // Adjusted font size
       fontWeight: "bold", // Changed font weight
       color: "#333333", // Updated color for better readability
+      alignSelf: "flex-end",
     },
     row: {
       flexDirection: "row",
@@ -207,6 +274,40 @@ const createStyles = (theme) =>
       width: 60, // Set the size as needed
       height: 60, // Set the size as needed
     },
+    modalView: {
+      margin: 20,
+      backgroundColor: "white",
+      borderRadius: 20,
+      padding: 35,
+      alignItems: "center",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      elevation: 5,
+    },
+    textInput: {
+      width: "100%",
+      padding: 10,
+      marginVertical: 10,
+      borderWidth: 1,
+      borderColor: "#ddd",
+      borderRadius: 5,
+      backgroundColor: "#f9f9f9",
+    },
+    datePicker: {
+      width: "100%",
+      padding: 10,
+      marginVertical: 10,
+    },
+    datePickerButton: {
+      padding: 10,
+      marginVertical: 10,
+      backgroundColor: "#f0f0f0",
+      borderRadius: 5,
+      alignItems: 'center',
+    },
+    
   });
 
 export default AdminHomeScreen;
