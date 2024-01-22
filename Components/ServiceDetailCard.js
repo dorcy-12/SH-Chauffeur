@@ -38,21 +38,21 @@ const ServiceDetailCard = ({ service }) => {
 
   return (
     <View style={styles.card}>
-      <Text style={styles.title}>{service.service_type_id[1]}</Text>
+      <Text style={styles.title}>Dein Fahrt</Text>
       <Text style={styles.highlightedDetail}>
-        Vehicle: {service.vehicle_id[1]}
+        Auto: {service.vehicle_id[1]}
       </Text>
-      <Text style={styles.detail}>Date: {service.date}</Text>
+      <Text style={styles.highlightedDetail}>Datum: {service.date}</Text>
       <Text style={styles.highlightedDetail}>
-        Purchaser: {service.purchaser_id[1]}
+        Fahrer: {service.purchaser_id[1]}
       </Text>
-      <Text style={styles.detail}>State: {service.state}</Text>
+      <Text style={styles.highlightedDetail}>Status: {service.state}</Text>
 
       <View style={styles.notesContainer}>
-        <Text style={styles.notesTitle}>Notes:</Text>
-        <ScrollView style={styles.notesScroll}>
+        <Text style={styles.notesTitle}>Notizen:</Text>
+        <View style={styles.notesScroll}>
           <Text style={styles.notesText}>{service.notes}</Text>
-        </ScrollView>
+        </View>
       </View>
 
       <View style={styles.buttonContainer}>
@@ -78,6 +78,8 @@ const createStyles = (theme) =>
       marginBottom: 20,
       // Adjust the height for a longer card
       minHeight: 300, // Adjust as needed
+      width:"80%",
+      //height:"50%"
     },
     title: {
       fontSize: 24,
@@ -114,9 +116,7 @@ const createStyles = (theme) =>
       color: theme.text,
     },
     buttonContainer: {
-      position: "absolute",
-      right: 20,
-      bottom: 20,
+     
     },
   });
 
