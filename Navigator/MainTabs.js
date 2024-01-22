@@ -23,7 +23,7 @@ function MainTabs() {
     >
       <Tab.Screen
         name="home"
-        component={AdminHomeScreen}
+        component={HomeScreen}
         options={{
           headerShown: false,
           tabBarLabel: "Home",
@@ -84,28 +84,7 @@ function MainTabs() {
         }}
       />
 
-      <Tab.Screen
-        name="planner"
-        component={FleetPlanScreen}
-        options={{
-          headerShown: false,
-          tabBarLabel: "Planner",
-          tabBarIcon: ({ focused, color, size }) => {
-            // Reduce the size of the icons
-            const iconSize = size * 0.8; // Adjust the factor to make icons smaller
-            // Return the icon component
-            return (
-              <FontAwesome
-                name="calendar"
-                color={color}
-                size={focused ? size : iconSize}
-                focused
-              />
-            );
-          },
-        }}
-      />
-
+      
       <Tab.Screen
         name="Chat"
         component={ChatScreen}

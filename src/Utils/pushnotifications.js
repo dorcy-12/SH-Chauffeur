@@ -4,6 +4,7 @@ import PushNotification from "react-native-push-notification";
 import { insertMessage } from "../../database";
 import { useMessageContext } from "../../context/MessageContext";
 
+
 export async function requestUserPermission() {
   const authStatus = await messaging().requestPermission();
   const enabled =
@@ -37,8 +38,9 @@ export const NotificationListener = (addMessage, addService) => {
     const { title, body } = remoteMessage.notification || {};
     const { data } = remoteMessage;
     // Process the message data and store it in the database
-    if (data && data.message_id) {
+    if (data && data.notification_id == "chat") {
       await storeMessage(data, body);
+      await AsyncStorage.setItem("reload", data.channel_id);
       console.log("Background message stored in SQLite database");
     }
   });
@@ -54,13 +56,6 @@ export const NotificationListener = (addMessage, addService) => {
     .then(async (remoteMessage) => {
       if (remoteMessage) {
         console.log("Notification caused app to open from quit state:");
-        const { title, body } = remoteMessage.notification || {};
-        const { data } = remoteMessage;
-        // Process the message data and store it in the database
-        if (data && data.message_id) {
-          await storeMessage(data, body);
-          console.log("Background message stored in SQLite database");
-        }
       }
     });
 
@@ -68,12 +63,11 @@ export const NotificationListener = (addMessage, addService) => {
     const { title, body } = remoteMessage.notification || {};
     console.log("triggered");
     console.log("Remote notifications on foreground state", remoteMessage);
-    handleNotification(remoteMessage);
     if (remoteMessage.data) {
       const notificationData = remoteMessage.data;
       if (notificationData.notification_id == "chat") {
         storeMessage(notificationData, body);
-        await displayMessage(notificationData);
+        await displayMessage(notificationData,body);
       } else if (notificationData.notification_id == "fahrDienst") {
         const newService = {
           id: parseInt(notificationData.id, 10),
@@ -153,7 +147,7 @@ export const NotificationListener = (addMessage, addService) => {
     }
   };
 
-  const displayMessage = async (data) => {
+  const displayMessage = async (data, messageBody) => {
     console.log("in desplay message with" + data);
     const {
       message_id,
@@ -167,7 +161,7 @@ export const NotificationListener = (addMessage, addService) => {
     const time = new Date(timestamp);
     const newMessage = {
       _id: parseInt(message_id, 10), // Assuming you have a unique message ID
-      text: message,
+      text: messageBody,
       createdAt: time, // Or use timestamp from the notification data
       user: {
         _id: parseInt(author_id, 10), // Unique ID for the author
