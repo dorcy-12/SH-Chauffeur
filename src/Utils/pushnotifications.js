@@ -4,6 +4,7 @@ import PushNotification from "react-native-push-notification";
 import { insertMessage } from "../../database";
 import { useMessageContext } from "../../context/MessageContext";
 
+
 export async function requestUserPermission() {
   const authStatus = await messaging().requestPermission();
   const enabled =
@@ -32,7 +33,17 @@ async function GetItemToken() {
   }
 }
 
-export const NotificationListener = (addMessage) => {
+export const NotificationListener = (addMessage, addService) => {
+  messaging().setBackgroundMessageHandler(async (remoteMessage) => {
+    const { title, body } = remoteMessage.notification || {};
+    const { data } = remoteMessage;
+    // Process the message data and store it in the database
+    if (data && data.notification_id == "chat") {
+      await storeMessage(data, body);
+      await AsyncStorage.setItem("reload", data.channel_id);
+      console.log("Background message stored in SQLite database");
+    }
+  });
   messaging().onNotificationOpenedApp((remoteMessage) => {
     console.log(
       "Notification caused app to open from background state:",
@@ -42,12 +53,9 @@ export const NotificationListener = (addMessage) => {
 
   messaging()
     .getInitialNotification()
-    .then((remoteMessage) => {
+    .then(async (remoteMessage) => {
       if (remoteMessage) {
-        console.log(
-          "Notification caused app to open from quit state:",
-          remoteMessage.notification
-        );
+        console.log("Notification caused app to open from quit state:");
       }
     });
 
@@ -56,11 +64,24 @@ export const NotificationListener = (addMessage) => {
     console.log("triggered");
     console.log("Remote notifications on foreground state", remoteMessage);
     if (remoteMessage.data) {
-      const notificationData = remoteMessage.data.message_id;
-      const parsedData = JSON.parse(notificationData.replace(/'/g, '"'));
-      console.log(parsedData);
-      storeMessage(parsedData,body);
-      await displayMessage(parsedData);
+      const notificationData = remoteMessage.data;
+      if (notificationData.notification_id == "chat") {
+        storeMessage(notificationData, body);
+        await displayMessage(notificationData,body);
+      } else if (notificationData.notification_id == "fahrDienst") {
+        const newService = {
+          id: parseInt(notificationData.id, 10),
+          state: notificationData.state,
+          description: notificationData.description,
+          notes: notificationData.notes,
+          date: notificationData.date,
+          purchaser_id: JSON.parse(notificationData.purchaser_id),
+          vehicle_id: JSON.parse(notificationData.vehicle_id),
+        };
+        addService(newService);
+
+        console.log("the new service ", newService);
+      }
     }
 
     /*
@@ -98,10 +119,17 @@ export const NotificationListener = (addMessage) => {
       console.log("No notification data found in remoteMessage.");
     }*/
   });
+ 
 
   const storeMessage = async (data, message) => {
-    const { message_id, channel_id, author_id, author_name,timestamp, attachment_ids } =
-      data;
+    const {
+      message_id,
+      channel_id,
+      author_id,
+      author_name,
+      timestamp,
+      attachment_ids,
+    } = data;
     try {
       await insertMessage(
         parseInt(message_id, 10),
@@ -119,7 +147,7 @@ export const NotificationListener = (addMessage) => {
     }
   };
 
-  const displayMessage = async (data) => {
+  const displayMessage = async (data, messageBody) => {
     console.log("in desplay message with" + data);
     const {
       message_id,
@@ -133,7 +161,7 @@ export const NotificationListener = (addMessage) => {
     const time = new Date(timestamp);
     const newMessage = {
       _id: parseInt(message_id, 10), // Assuming you have a unique message ID
-      text: message,
+      text: messageBody,
       createdAt: time, // Or use timestamp from the notification data
       user: {
         _id: parseInt(author_id, 10), // Unique ID for the author

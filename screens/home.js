@@ -23,18 +23,16 @@ import PushNotification from "react-native-push-notification";
 function HomeScreen({ navigation }) {
   const theme = useTheme();
   const styles = createStyles(theme);
-  const [services, setServices] = useState([]);
-  const { activeService, setActiveService } = useService();
+  const { activeService, setActiveService, services, setServices } =
+    useService();
   const [refreshing, setRefreshing] = useState(false); // Add this line
-  const { setIsUserLoggedIn, userId, password } =
-    useContext(AuthContext);
+  const { setIsUserLoggedIn, userId, password } = useContext(AuthContext);
   const [isLoading, setIsLoading] = useState(false);
 
   const { shouldReloadServices, setShouldReloadServices } =
     useContext(AuthContext);
 
   useEffect(() => {
-  
     PushNotification.createChannel(
       {
         channelId: "timer-channel", // (required)
@@ -113,9 +111,9 @@ function HomeScreen({ navigation }) {
               >
                 <Card
                   vehicleName={item.vehicle_id[1]} // Vehicle name
-                  serviceType={item.service_type_id[1]} // Service type
                   serviceDate={item.date} // Service date
                   description={item.description}
+                  notes={item.notes}
                 />
               </TouchableOpacity>
             )}

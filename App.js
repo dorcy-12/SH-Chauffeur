@@ -19,6 +19,7 @@ import {
 import messaging from "@react-native-firebase/messaging";
 import { initDB, getChannels, getUsers, getUserProfile } from "./database";
 import { MessageProvider, useMessageContext } from "./context/MessageContext";
+import { useService } from "./context/ServiceContext";
 
 PushNotification.configure({
   onRegister: function (token) {
@@ -59,10 +60,11 @@ PushNotification.configure({
 
 const App2 = () => {
   const { addMessage } = useMessageContext();
+  const { addService } = useService();
   useEffect(() => {
     async function setupNotifications() {
       await requestUserPermission();
-      NotificationListener(addMessage);
+      NotificationListener(addMessage, addService);
     }
 
     setupNotifications();
@@ -70,9 +72,7 @@ const App2 = () => {
 
   return (
     <NavigationContainer>
-      <ServiceProvider>
-        <RootNavigator />
-      </ServiceProvider>
+      <RootNavigator />
     </NavigationContainer>
   );
 };
@@ -93,7 +93,7 @@ export default function App() {
       console.log(uid);
       const password = await SecureStore.getItemAsync("password");
       const employeeId = await SecureStore.getItemAsync("employeeId");
-    
+
       console.log("password");
       if (uid && password) {
         const fetchedChannels = await getChannels();
@@ -142,20 +142,22 @@ export default function App() {
       }}
     >
       <MessageProvider>
-        <ThemeProvider>
-          {isLoading ? (
-            <View style={styles.loadingContainer}>
-              <LottieView
-                source={loading}
-                autoPlay
-                loop
-                style={styles.lottieAnimation}
-              />
-            </View>
-          ) : (
-            <App2 />
-          )}
-        </ThemeProvider>
+        <ServiceProvider>
+          <ThemeProvider>
+            {isLoading ? (
+              <View style={styles.loadingContainer}>
+                <LottieView
+                  source={loading}
+                  autoPlay
+                  loop
+                  style={styles.lottieAnimation}
+                />
+              </View>
+            ) : (
+              <App2 />
+            )}
+          </ThemeProvider>
+        </ServiceProvider>
       </MessageProvider>
     </AuthContext.Provider>
   );

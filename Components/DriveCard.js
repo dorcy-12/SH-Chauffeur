@@ -12,7 +12,7 @@ const DriveCard = ({ drive }) => {
         <MaterialIcons name={iconName} size={24} color={drive.state === "done" ? "#28a745" : "#dc3545"} />
         <Text style={styles.dateText}>{drive.date}</Text>
       </View>
-      <Text style={styles.destinationText}>{drive.description}</Text>
+      <Text style={styles.destinationText}>Ort: {drive.description}</Text>
       <Text style={styles.statusText}>{drive.state.toUpperCase()}</Text>
     </View>
   ); 

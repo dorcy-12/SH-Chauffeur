@@ -136,9 +136,10 @@ export async function fetchVehicleServices(userId, serviceState, password) {
         pin,
         "fleet.vehicle.log.services",
         "search_read",
-        [[["state", "=", serviceState]]],
+        [[['state','=', serviceState]]],
         {
           fields: [
+            "id",
             "service_type_id",
             "vehicle_id",
             "date",
@@ -586,43 +587,6 @@ export async function uploadAttachment(
     return result; // Returns the ID of the created record
   } catch (error) {
     console.error("Error in uploading attachment", error);
-    throw error;
-  }
-}
-
-export async function fetchVehicles(userId) {
-  const url = `${BASE_URL}/jsonrpc`;
-  const pin = await SecureStore.getItemAsync("password");
-
-  const payload = {
-    jsonrpc: "2.0",
-    method: "call",
-    params: {
-      service: "object",
-      method: "execute_kw",
-      args: [
-        DB_NAME,
-        userId,
-        pin,
-        "fleet.vehicle",
-        "search_read",
-        [[]], // Empty array for matching all records
-        {
-          fields: ["id", "name", "description", "license_plate"], // Specify the fields you want to retrieve
-
-        },
-      ],
-    },
-    id: Math.floor(Math.random() * 100) + 1,
-  };
-
-  try {
-    const response = await axios.post(url, payload);
-    const Vehicles = response.data.result;
-    console.log("Vehicles successfully retrieved", Vehicles);
-    return Vehicles;
-  } catch (error) {
-    console.error("Error in fetch Vehicles", error);
     throw error;
   }
 }
