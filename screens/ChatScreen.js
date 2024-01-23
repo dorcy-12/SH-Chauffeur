@@ -49,6 +49,7 @@ const ChatScreen = () => {
   const { userId, channels, partnerId, employeeName } = useContext(AuthContext);
   const [currentChannel, setCurrentChannel] = useState(channels[0]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isFirstRender, setIsFirstRender] = useState({});
 
   useEffect(() => {
     const targetValue = sidebarVisible ? 0 : -width * 0.7;
@@ -66,6 +67,7 @@ const ChatScreen = () => {
       const channelId = currentChannel.id;
       const newMessageCount = messageCounts[channelId];
       console.log(newMessageCount);
+      console.log("is first rendered", isFirstRender[currentChannel.id]);
       if (newMessageCount > 0) {
         await fetchAndStoreMessages(currentChannel.id, newMessageCount);
         // Remove the current channel ID from the reload list
@@ -74,9 +76,16 @@ const ChatScreen = () => {
           "messageCounts",
           JSON.stringify(messageCounts)
         );
-      } else if (messages[currentChannel.id] === undefined) {
+      } else if (
+        messages[currentChannel.id] === undefined ||
+        isFirstRender[currentChannel.id] === undefined
+      ) {
         console.log("channel has no messages  ", currentChannel.id);
-        await fetchAndStoreMessages(currentChannel.id, 20);
+        await fetchAndStoreMessages(currentChannel.id, 20, true);
+        setIsFirstRender((prev) => ({
+          ...prev,
+          [currentChannel.id]: false,
+        }));
       }
     };
 
@@ -93,7 +102,7 @@ const ChatScreen = () => {
     };
   }, [currentChannel]);
 
-  const fetchAndStoreMessages = async (channel_id, limit) => {
+  const fetchAndStoreMessages = async (channel_id, limit, replace = false) => {
     try {
       setIsLoading(true);
       console.log("fetching from server");
@@ -102,24 +111,42 @@ const ChatScreen = () => {
 
       const reversedServerMessages = serverMessages.reverse();
 
-      // Convert each message and store it using insertMessage
-      reversedServerMessages.map(async (msg) => {
-        const body = msg.body.replace(/<\/?[^>]+(>|$)/g, "");
-        //const attachment_ids = JSON.stringify(msg.attachment_ids || []);
+      if (!replace) {
+        reversedServerMessages.map((msg) => {
+          const body = msg.body.replace(/<\/?[^>]+(>|$)/g, "");
+          //const attachment_ids = JSON.stringify(msg.attachment_ids || []);
 
-        const newMessage = {
-          _id: msg.id,
-          text: body,
-          createdAt: new Date(msg.date),
-          user: {
-            _id: msg.author_id[0],
-            name: msg.author_id[1], // Assuming this is the author's name
-          },
-          // Include other properties if needed
-        };
-        // Update the UI
-        addMessage(channel_id, [newMessage]);
-      });
+          const newMessage = {
+            _id: msg.id,
+            text: body,
+            createdAt: new Date(msg.date),
+            user: {
+              _id: msg.author_id[0],
+              name: msg.author_id[1], // Assuming this is the author's name
+            },
+            // Include other properties if needed
+          };
+          // Update the UI
+          addMessage(channel_id, [newMessage]);
+        });
+      } else {
+        const newMessages = serverMessages.map((msg) => {
+          const body = msg.body.replace(/<\/?[^>]+(>|$)/g, "");
+          //const attachment_ids = JSON.stringify(msg.attachment_ids || []);
+
+          return {
+            _id: msg.id,
+            text: body,
+            createdAt: new Date(msg.date),
+            user: {
+              _id: msg.author_id[0],
+              name: msg.author_id[1], // Assuming this is the author's name
+            },
+          };
+        });
+
+        addMessage(channel_id, newMessages, true);
+      }
     } catch (error) {
       console.log("error in retrieving messages ", error);
     } finally {
@@ -128,7 +155,7 @@ const ChatScreen = () => {
     }
   };
   const renderChannelName = (channel) => {
-    if (channel.channel_type === 'chat') {
+    if (channel.channel_type === "chat") {
       console.log("current channel is", channel);
       return getOtherPersonName(channel.name, employeeName);
     }
@@ -155,7 +182,6 @@ const ChatScreen = () => {
   const selectChannel = (channel) => {
     setCurrentChannel(channel);
     setSidebarVisible(false);
-    console.log(channel);
   };
 
   const renderSend = (props) => {
@@ -261,6 +287,7 @@ const ChatScreen = () => {
 
   const handleMenuButtonPressed = async () => {
     setSidebarVisible(!sidebarVisible);
+    //console.log(messages[currentChannel.id]);
   };
 
   return (
@@ -268,7 +295,9 @@ const ChatScreen = () => {
       <View style={{ flex: 1 }}>
         <TouchableOpacity style={styles.menu} onPress={handleMenuButtonPressed}>
           <Ionicons name="menu" size={30} color={theme.secondary} />
-          <Text style={styles.currentChannel}>{renderChannelName(currentChannel)}</Text>
+          <Text style={styles.currentChannel}>
+            {renderChannelName(currentChannel)}
+          </Text>
         </TouchableOpacity>
 
         <Animated.View
