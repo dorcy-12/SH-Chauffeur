@@ -5,6 +5,7 @@ import { MaterialIcons } from '@expo/vector-icons'; // Ensure you have this depe
 const DriveCard = ({ drive }) => {
   const cardStyle = drive.state === "done" ? styles.successCard : styles.failureCard;
   const iconName = drive.state === "done" ? "check-circle" : "cancel";
+  const driveState = drive.state === "done" ? "FERTIG" : "ABGEBROCHEN";
 
   return (
     <View style={[styles.card, cardStyle]}>
@@ -13,7 +14,7 @@ const DriveCard = ({ drive }) => {
         <Text style={styles.dateText}>{drive.date}</Text>
       </View>
       <Text style={styles.destinationText}>Ort: {drive.description}</Text>
-      <Text style={styles.statusText}>{drive.state.toUpperCase()}</Text>
+      <Text style={styles.statusText}>{driveState}</Text>
     </View>
   ); 
 };

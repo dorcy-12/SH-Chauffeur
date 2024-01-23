@@ -1,10 +1,21 @@
 import React, { useContext } from "react";
-import { View, Text, StyleSheet, Button, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Button,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+} from "react-native";
 import { useTheme } from "../context/ThemeContext";
 import { useNavigation } from "@react-navigation/native";
 import { useService } from "../context/ServiceContext";
 import { AuthContext } from "../context/UserAuth";
-import {createEmployeeCheckIn, changeServiceState} from "../service/authservice";
+import {
+  createEmployeeCheckIn,
+  changeServiceState,
+} from "../service/authservice";
 const ServiceDetailCard = ({ service }) => {
   const navigation = useNavigation();
   const theme = useTheme();
@@ -15,48 +26,71 @@ const ServiceDetailCard = ({ service }) => {
   console.log(service);
 
   const handlenavigation = async () => {
-    console.log("userId is" + userId +"employeeId is" + employeeId)
-    const checkin = await createEmployeeCheckIn(employeeId, userId, password );
-    console.log("check in " + checkin)
-    const state = await changeServiceState(userId, service.id, "running", password );  
-    console.log("serviceid " + service.id) 
-    console.log("check state" + state)
-    console.log("employeeId " + employeeId)
-    console.log("userId " + userId)
-    console.log("password " + password)
+    console.log("userId is" + userId + "employeeId is" + employeeId);
+    const checkin = await createEmployeeCheckIn(employeeId, userId, password);
+    console.log("check in " + checkin);
+    const state = await changeServiceState(
+      userId,
+      service.id,
+      "running",
+      password
+    );
+    console.log("serviceid " + service.id);
+    console.log("check state" + state);
+    console.log("employeeId " + employeeId);
+    console.log("userId " + userId);
+    console.log("password " + password);
 
     console.log(state);
-    if (checkin && state){
-      console.log("check in " + checkin)
-      console.log("serviceid " + service.id) 
-      console.log("check state" + state)
-      navigation.navigate("Timer", {"checkinId": checkin, "serviceId":service.id });
+    if (checkin && state) {
+      console.log("check in " + checkin);
+      console.log("serviceid " + service.id);
+      console.log("check state" + state);
+      navigation.navigate("Timer", {
+        checkinId: checkin,
+        serviceId: service.id,
+      });
     }
-   
   };
-  
 
   return (
-    <View style={styles.card}>
-      <Text style={styles.title}>Dein Fahrt</Text>
-      <Text style={styles.highlightedDetail}>
-        Auto: {service.vehicle_id[1]}
-      </Text>
-      <Text style={styles.highlightedDetail}>Datum: {service.date}</Text>
-      <Text style={styles.highlightedDetail}>
-        Fahrer: {service.purchaser_id[1]}
-      </Text>
-      <Text style={styles.highlightedDetail}>Status: {service.state}</Text>
+    <View style={styles.container}>
+      <View style={styles.card}>
+        <Text style={styles.title}>Dein Fahrt</Text>
+        <Text style={styles.highlightedDetail}>
+          Auto: {service.vehicle_id[1]}
+        </Text>
+        <Text style={styles.highlightedDetail}>Datum: {service.date}</Text>
 
-      <View style={styles.notesContainer}>
-        <Text style={styles.notesTitle}>Notizen:</Text>
-        <View style={styles.notesScroll}>
-          <Text style={styles.notesText}>{service.notes}</Text>
+        <View style={{ flexDirection: "row", alignItems: "baseline" }}>
+          <Text style={styles.highlightedDetail}>Fahrer: </Text>
+          <Text>{service.purchaser_id[1]}</Text>
         </View>
-      </View>
+        <View style={{ flexDirection: "row", alignItems: "baseline" }}>
+          <Text style={styles.highlightedDetail}>Ort:</Text>
+          <Text style={[styles.detail, { marginLeft: 5 }]}>
+            {service.description}
+          </Text>
+        </View>
 
-      <View style={styles.buttonContainer}>
-        <Button title="Jetzt fahren" onPress={handlenavigation} />
+        <View style={styles.notesContainer}>
+          <Text style={styles.notesTitle}>Notizen:</Text>
+          <TextInput
+            style={styles.notesTextInput}
+            multiline // Allows multiple lines
+            editable={false} // Makes it non-editable
+            value={service.notes ? service.notes : ""}
+          />
+        </View>
+
+        <TouchableOpacity
+          style={styles.buttonContainer}
+          onPress={handlenavigation}
+        >
+          <Text style={{ fontWeight: "700", color: "white" }}>
+            Jetzt Fahren
+          </Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -64,7 +98,13 @@ const ServiceDetailCard = ({ service }) => {
 
 const createStyles = (theme) =>
   StyleSheet.create({
+    container:{
+      flex:1,
+      justifyContent:"center",
+      alignItems:"center"
+    },
     card: {
+      //flex: 1,
       borderRadius: 10,
       padding: 20,
       backgroundColor: theme.tertiary,
@@ -73,13 +113,9 @@ const createStyles = (theme) =>
       shadowOpacity: 0.1,
       shadowRadius: 2,
       elevation: 5,
-      marginHorizontal: 10,
-      marginTop: 30,
-      marginBottom: 20,
-      // Adjust the height for a longer card
-      minHeight: 300, // Adjust as needed
-      width:"80%",
-      //height:"50%"
+      //alignSelf: "center",
+      width: "80%",
+      height: "60%",
     },
     title: {
       fontSize: 24,
@@ -116,7 +152,18 @@ const createStyles = (theme) =>
       color: theme.text,
     },
     buttonContainer: {
-     
+      backgroundColor: theme.primary,
+      padding: 10,
+      alignItems: "center",
+      borderRadius: 12,
+    },
+    notesTextInput: {
+      fontSize: 16,
+      color: theme.text,
+      backgroundColor: "#f0f0f0", // Optional: add a background color
+      borderRadius: 5, // Optional: add rounded corners
+      padding: 10, // Optional: add padding
+      // Add any other styling you want for the TextInput
     },
   });
 

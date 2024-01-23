@@ -27,26 +27,28 @@ const ProfileScreen = ({ navigation }) => {
     setUserId,
     setEmployeeId,
     employeeId,
+    setEmployeeName,
     setPassword,
+    setChannels,
   } = useContext(AuthContext);
 
   const handleLogout = async () => {
     //await wipeMessagesTable();
-    const localMessages = await getUsers();
-    console.log(localMessages)
-    /*
     await deleteUserFirebaseTokens("userId");
     await SecureStore.deleteItemAsync("userId");
     await SecureStore.deleteItemAsync("password");
     await SecureStore.deleteItemAsync("employeeId");
     await AsyncStorage.removeItem("token");
-    await AsyncStorage.removeItem("channels");
+    //await AsyncStorage.removeItem("channels");
     setUserId(null);
+    setChannels(null);
     setEmployeeId(null);
+    setEmployeeName(null);
     setPassword(null);
     setIsUserLoggedIn(false);
+   
     // Clear other sensitive data as needed
-    */
+    
   };
 
   const [profileData, setProfileData] = useState({

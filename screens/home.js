@@ -58,7 +58,7 @@ function HomeScreen({ navigation }) {
 
       console.log("the user " + userId);
       setServices(fetchedServices);
-      console.log("fetched services" + fetchedServices);
+      console.log("fetched services" , fetchedServices);
     } catch (error) {
       console.error("Error loading services:", error);
     } finally {
