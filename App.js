@@ -82,6 +82,7 @@ export default function App() {
   const [userId, setUserId] = useState(null);
   const [partnerId, setPartnerId] = useState(null);
   const [employeeId, setEmployeeId] = useState(null);
+  const [employeeName, setEmployeeName] = useState(null);
   const [password, setPassword] = useState(null);
   const [shouldReloadServices, setShouldReloadServices] = useState(false);
   const [channels, setChannels] = useState(null);
@@ -105,6 +106,7 @@ export default function App() {
         setChannels(fetchedChannels);
         setPartnerId(partner);
         setEmployeeId(employeeId);
+        setEmployeeName(user.name);
         setIsUserLoggedIn(true);
         setIsLoading(false);
       } else {

@@ -5,6 +5,7 @@ export const AuthContext = createContext({
   userId: null,
   partnerId:null,
   employeeId: null,
+  employeeName:null,
   password:null,
   shouldReloadServices: false,
   channels: null,
@@ -15,4 +16,5 @@ export const AuthContext = createContext({
   setPassword: () => {},
   setShouldReloadServices: () => {},
   setChannels: () =>{},
+  setEmployeeName:() => {},
 });

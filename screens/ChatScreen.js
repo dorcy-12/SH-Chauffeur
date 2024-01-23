@@ -46,7 +46,7 @@ const ChatScreen = () => {
   const theme = useTheme();
   const styles = createStyles(theme);
   const sidebarX = useRef(new Animated.Value(-width * 0.7)).current;
-  const { userId, channels, partnerId } = useContext(AuthContext);
+  const { userId, channels, partnerId, employeeName } = useContext(AuthContext);
   const [currentChannel, setCurrentChannel] = useState(channels[0]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -98,11 +98,7 @@ const ChatScreen = () => {
       setIsLoading(true);
       console.log("fetching from server");
 
-      const serverMessages = await getServerMessages(
-        userId,
-        channel_id,
-        limit
-      );
+      const serverMessages = await getServerMessages(userId, channel_id, limit);
 
       const reversedServerMessages = serverMessages.reverse();
 
@@ -130,6 +126,18 @@ const ChatScreen = () => {
       setSidebarVisible(false);
       setIsLoading(false);
     }
+  };
+  const renderChannelName = (channel) => {
+    if (channel.channel_type === 'chat') {
+      console.log("current channel is", channel);
+      return getOtherPersonName(channel.name, employeeName);
+    }
+    return channel.name;
+  };
+
+  const getOtherPersonName = (chatTitle, myName) => {
+    const names = chatTitle.split(",").map((name) => name.trim());
+    return names.find((name) => name !== myName) || chatTitle;
   };
 
   const onSend = async (newMessages = []) => {
@@ -260,7 +268,7 @@ const ChatScreen = () => {
       <View style={{ flex: 1 }}>
         <TouchableOpacity style={styles.menu} onPress={handleMenuButtonPressed}>
           <Ionicons name="menu" size={30} color={theme.secondary} />
-          <Text style={styles.currentChannel}>{currentChannel.name}</Text>
+          <Text style={styles.currentChannel}>{renderChannelName(currentChannel)}</Text>
         </TouchableOpacity>
 
         <Animated.View
@@ -285,7 +293,7 @@ const ChatScreen = () => {
                       : styles.channel
                   }
                 >
-                  {channel.name}
+                  {renderChannelName(channel)}
                 </Text>
               </TouchableOpacity>
             ))}
