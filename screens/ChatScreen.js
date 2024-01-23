@@ -109,9 +109,8 @@ const ChatScreen = () => {
 
       const serverMessages = await getServerMessages(userId, channel_id, limit);
 
-      const reversedServerMessages = serverMessages.reverse();
-
       if (!replace) {
+        const reversedServerMessages = serverMessages.reverse();
         reversedServerMessages.map((msg) => {
           const body = msg.body.replace(/<\/?[^>]+(>|$)/g, "");
           //const attachment_ids = JSON.stringify(msg.attachment_ids || []);
@@ -130,6 +129,7 @@ const ChatScreen = () => {
           addMessage(channel_id, [newMessage]);
         });
       } else {
+        console.log("serverMessages came so ", serverMessages);
         const newMessages = serverMessages.map((msg) => {
           const body = msg.body.replace(/<\/?[^>]+(>|$)/g, "");
           //const attachment_ids = JSON.stringify(msg.attachment_ids || []);
@@ -144,6 +144,7 @@ const ChatScreen = () => {
             },
           };
         });
+        console.log("the new Messages are ", newMessages);
 
         addMessage(channel_id, newMessages, true);
       }
@@ -156,7 +157,6 @@ const ChatScreen = () => {
   };
   const renderChannelName = (channel) => {
     if (channel.channel_type === "chat") {
-      console.log("current channel is", channel);
       return getOtherPersonName(channel.name, employeeName);
     }
     return channel.name;
