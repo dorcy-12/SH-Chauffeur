@@ -4,7 +4,6 @@ import PushNotification from "react-native-push-notification";
 import { insertMessage } from "../../database";
 import { useMessageContext } from "../../context/MessageContext";
 
-
 export async function requestUserPermission() {
   const authStatus = await messaging().requestPermission();
   const enabled =
@@ -39,9 +38,13 @@ export const NotificationListener = (addMessage, addService) => {
     const { data } = remoteMessage;
     // Process the message data and store it in the database
     if (data && data.notification_id == "chat") {
-      await storeMessage(data, body);
-      await AsyncStorage.setItem("reload", data.channel_id);
-      console.log("Background message stored in SQLite database");
+      //await storeMessage(data, body);
+      let messageCounts = JSON.parse(await AsyncStorage.getItem("messageCounts")) || {};
+      const channelId = parseInt(data.channel_id, 10);
+      messageCounts[channelId] = (messageCounts[channelId] || 0) + 1;
+      await AsyncStorage.setItem("messageCounts", JSON.stringify(messageCounts));
+      console.log("Message count updated for channel", channelId);
+   
     }
   });
   messaging().onNotificationOpenedApp((remoteMessage) => {
@@ -66,8 +69,8 @@ export const NotificationListener = (addMessage, addService) => {
     if (remoteMessage.data) {
       const notificationData = remoteMessage.data;
       if (notificationData.notification_id == "chat") {
-        storeMessage(notificationData, body);
-        await displayMessage(notificationData,body);
+        //storeMessage(notificationData, body);
+        await displayMessage(notificationData, body);
       } else if (notificationData.notification_id == "fahrDienst") {
         const newService = {
           id: parseInt(notificationData.id, 10),
@@ -119,7 +122,6 @@ export const NotificationListener = (addMessage, addService) => {
       console.log("No notification data found in remoteMessage.");
     }*/
   });
- 
 
   const storeMessage = async (data, message) => {
     const {
@@ -156,12 +158,13 @@ export const NotificationListener = (addMessage, addService) => {
       message,
       author_name,
       timestamp,
+      channel_type
     } = data;
     console.log("message id is " + message_id);
     const time = new Date(timestamp);
     const newMessage = {
       _id: parseInt(message_id, 10), // Assuming you have a unique message ID
-      text: messageBody,
+      text: message,
       createdAt: time, // Or use timestamp from the notification data
       user: {
         _id: parseInt(author_id, 10), // Unique ID for the author

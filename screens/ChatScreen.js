@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useContext } from "react";
+import { AppState } from "react-native";
 import {
   View,
   Text,
@@ -36,6 +37,7 @@ import {
   getAllMessages,
 } from "../database";
 import LottieView from "lottie-react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width, height } = Dimensions.get("window");
 const ChatScreen = () => {
@@ -58,84 +60,77 @@ const ChatScreen = () => {
   }, [sidebarVisible]);
 
   useEffect(() => {
-    const fetchAndStoreMessages = async () => {
-      console.log("entered the fetch and store with id " + currentChannel);
-      const localMessages = await getLocalMessages(currentChannel.id);
-
-      if (
-        messages[currentChannel.id] === undefined &&
-        localMessages.length === 0
-      ) {
-        console.log("fetching from server");
-        const serverMessages = await getServerMessages(
-          userId,
-          currentChannel.id,
-          5
+    const reloadChannels = async () => {
+      const messageCounts =
+        JSON.parse(await AsyncStorage.getItem("messageCounts")) || {};
+      const channelId = currentChannel.id;
+      const newMessageCount = messageCounts[channelId];
+      console.log(newMessageCount);
+      if (newMessageCount > 0) {
+        await fetchAndStoreMessages(currentChannel.id, newMessageCount);
+        // Remove the current channel ID from the reload list
+        messageCounts[channelId] = 0;
+        await AsyncStorage.setItem(
+          "messageCounts",
+          JSON.stringify(messageCounts)
         );
-
-        const reversedServerMessages = serverMessages.reverse();
-
-        // Convert each message and store it using insertMessage
-        const insertPromises = reversedServerMessages.map(async (msg) => {
-          const body = msg.body.replace(/<\/?[^>]+(>|$)/g, "");
-          const attachment_ids = JSON.stringify(msg.attachment_ids || []);
-
-          await insertMessage(
-            msg.id,
-            currentChannel.id,
-            msg.author_id[0],
-            msg.author_id[1],
-            body,
-            msg.date,
-            attachment_ids,
-            msg.author_id[0] == partnerId ? "sent" : "received"
-          );
-
-          const newMessage = {
-            _id: msg.id,
-            text: body,
-            createdAt: new Date(msg.date),
-            user: {
-              _id: msg.author_id[0],
-              name: msg.author_id[1], // Assuming this is the author's name
-            },
-            // Include other properties if needed
-          };
-
-          // Update the UI
-          addMessage(currentChannel.id, [newMessage]);
-        });
-
-        // Wait for all insert operations to complete
-        await Promise.all(insertPromises);
-
-        setIsLoading(false);
-      } else if (
-        messages[currentChannel.id] === undefined &&
-        localMessages.length != 0
-      ) {
-        console.log("fetching from local");
-        const formattedLocalMessages = localMessages.map((msg) => ({
-          _id: msg.odoo_message_id, // or msg.id depending on which ID you want to use
-          text: msg.message,
-          createdAt: new Date(msg.timestamp),
-          user: {
-            _id: msg.partner_id,
-            name: msg.username, // Assuming this is the username
-          },
-          // Include other properties if needed
-        }));
-
-        // Update the UI with local messages
-        addMessage(currentChannel.id, formattedLocalMessages);
-        setIsLoading(false);
-      } else {
-        setIsLoading(false);
+      } else if (messages[currentChannel.id] === undefined) {
+        console.log("channel has no messages  ", currentChannel.id);
+        await fetchAndStoreMessages(currentChannel.id, 20);
       }
     };
 
-    fetchAndStoreMessages().catch(console.error);
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      if (nextAppState === "active") {
+        reloadChannels();
+      }
+    });
+    // Call reloadChannels on initial render and when currentChannel changes
+    reloadChannels();
+
+    return () => {
+      subscription.remove();
+    };
   }, [currentChannel]);
+
+  const fetchAndStoreMessages = async (channel_id, limit) => {
+    try {
+      setIsLoading(true);
+      console.log("fetching from server");
+
+      const serverMessages = await getServerMessages(
+        userId,
+        channel_id,
+        limit
+      );
+
+      const reversedServerMessages = serverMessages.reverse();
+
+      // Convert each message and store it using insertMessage
+      reversedServerMessages.map(async (msg) => {
+        const body = msg.body.replace(/<\/?[^>]+(>|$)/g, "");
+        //const attachment_ids = JSON.stringify(msg.attachment_ids || []);
+
+        const newMessage = {
+          _id: msg.id,
+          text: body,
+          createdAt: new Date(msg.date),
+          user: {
+            _id: msg.author_id[0],
+            name: msg.author_id[1], // Assuming this is the author's name
+          },
+          // Include other properties if needed
+        };
+        // Update the UI
+        addMessage(channel_id, [newMessage]);
+      });
+    } catch (error) {
+      console.log("error in retrieving messages ", error);
+    } finally {
+      setSidebarVisible(false);
+      setIsLoading(false);
+    }
+  };
 
   const onSend = async (newMessages = []) => {
     addMessage(currentChannel.id, newMessages);
@@ -262,59 +257,56 @@ const ChatScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <LottieView
-            source={require("../assets/loading.json")}
-            autoPlay
-            loop
-            style={styles.lottieAnimation}
-          />
-        </View>
-      ) : (
-        <View style={{ flex: 1 }}>
-          <TouchableOpacity
-            style={styles.menu}
-            onPress={handleMenuButtonPressed}
-          >
-            <Ionicons name="menu" size={30} color={theme.secondary} />
-            <Text style={styles.currentChannel}>{currentChannel.name}</Text>
-          </TouchableOpacity>
+      <View style={{ flex: 1 }}>
+        <TouchableOpacity style={styles.menu} onPress={handleMenuButtonPressed}>
+          <Ionicons name="menu" size={30} color={theme.secondary} />
+          <Text style={styles.currentChannel}>{currentChannel.name}</Text>
+        </TouchableOpacity>
 
-          <Animated.View
-            style={[
-              styles.sidebar,
-              {
-                transform: [{ translateX: sidebarX }],
-              },
-            ]}
-          >
-            <ScrollView>
-              <Text style={styles.channelHeader}>Kanälen</Text>
-              {channels.map((channel, index) => (
-                <TouchableOpacity
-                  key={index}
-                  onPress={() => selectChannel(channel)}
+        <Animated.View
+          style={[
+            {
+              transform: [{ translateX: sidebarX }],
+              zIndex: 10,
+            },
+          ]}
+        >
+          <ScrollView style={styles.sidebar}>
+            <Text style={styles.channelHeader}>Kanälen</Text>
+            {channels.map((channel, index) => (
+              <TouchableOpacity
+                key={index}
+                onPress={() => selectChannel(channel)}
+              >
+                <Text
+                  style={
+                    channel.name === currentChannel.name
+                      ? styles.highlightedChannel
+                      : styles.channel
+                  }
                 >
-                  <Text
-                    style={
-                      channel.name === currentChannel.name
-                        ? styles.highlightedChannel
-                        : styles.channel
-                    }
-                  >
-                    {channel.name}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </Animated.View>
+                  {channel.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </Animated.View>
 
-          <TouchableWithoutFeedback
-            onPress={() => {
-              setSidebarVisible(false);
-            }}
-          >
+        <TouchableWithoutFeedback
+          onPress={() => {
+            setSidebarVisible(false);
+          }}
+        >
+          {isLoading ? (
+            <View style={styles.loadingContainer}>
+              <LottieView
+                source={require("../assets/loading.json")}
+                autoPlay
+                loop
+                style={styles.lottieAnimation}
+              />
+            </View>
+          ) : (
             <View style={[styles.chatContainer]}>
               <GiftedChat
                 messages={messages[currentChannel.id] || []}
@@ -327,9 +319,9 @@ const ChatScreen = () => {
                 renderBubble={renderBubble}
               />
             </View>
-          </TouchableWithoutFeedback>
-        </View>
-      )}
+          )}
+        </TouchableWithoutFeedback>
+      </View>
     </SafeAreaView>
   );
 };
@@ -359,14 +351,15 @@ const createStyles = (theme) =>
       position: "absolute",
       left: 0,
       top: 0,
-      height: "100%",
+      //height: "100%",
       width: "70%",
       backgroundColor: theme.primaryText,
       padding: 20,
       borderRightWidth: 1,
       borderRightColor: "#ddd",
       borderTopRightRadius: 20,
-      zIndex: 4,
+      borderBottomRightRadius: 20,
+      //zIndex: 100,
     },
     channelHeader: {
       fontSize: 25,
