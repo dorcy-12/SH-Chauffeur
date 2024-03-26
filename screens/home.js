@@ -24,7 +24,10 @@ function HomeScreen({ navigation }) {
   const styles = createStyles(theme);
   const { activeService, setActiveService, services, setServices } =
     useService();
+  const { activeService, setActiveService, services, setServices } =
+    useService();
   const [refreshing, setRefreshing] = useState(false); // Add this line
+  const { setIsUserLoggedIn, userId, password } = useContext(AuthContext);
   const { setIsUserLoggedIn, userId, password } = useContext(AuthContext);
   const [isLoading, setIsLoading] = useState(false);
   const { shouldReloadServices, setShouldReloadServices } =
@@ -110,6 +113,7 @@ function HomeScreen({ navigation }) {
                   serviceType={item.notes} // Service type
                   serviceDate={item.date} // Service date
                   description={item.description}
+                  notes={item.notes}
                 />
               </TouchableOpacity>
             )}

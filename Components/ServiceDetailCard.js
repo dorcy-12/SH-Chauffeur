@@ -79,7 +79,7 @@ const ServiceDetailCard = ({ service }) => {
         <Text style={styles.notesTitle}>Notizen: </Text>
         <ScrollView style={styles.notesScroll}>
           <Text style={styles.notesText}>{service.notes}</Text>
-        </ScrollView>
+        </View>
       </View>
 
       <View style={styles.buttonContainer}>

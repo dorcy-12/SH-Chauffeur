@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext } from "react";
+import React, { createContext, useState, useContext } from "react";
 
 const ServiceContext = createContext();
 
@@ -11,6 +12,15 @@ export const ServiceProvider = ({ children }) => {
   };
 
   return (
+    <ServiceContext.Provider
+      value={{
+        services,
+        activeService,
+        setActiveService,
+        setServices,
+        addService,
+      }}
+    >
     <ServiceContext.Provider
       value={{
         services,

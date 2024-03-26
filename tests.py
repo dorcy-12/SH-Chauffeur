@@ -25,7 +25,7 @@ def get_all_employees():
         db, uid, password,
         'hr.employee', 'search_read',
         [[]],  # Empty list for search domain to get all records
-        { 'fields': [],'limit':2}  # Fields you want to fetch, such as 'id' and 'name'
+        {'fields': [],'limit':1}  # Fields you want to fetch, such as 'id' and 'name'
     )
 
     for employee in employees:
@@ -38,7 +38,12 @@ def get_all_employees():
 #    'ir.model', 'search_read',
 #    [[]],
 #   {'fields': ['model']}
-#)
+        
+# 
+{'id': 2, 'partner_id': [3, 'Administrator']}
+{'id': 8, 'partner_id': [12, 'Dorcy Agape Hakizimana']}
+{'id': 9, 'partner_id': [13, 'frank kukiki']}
+"""
 
 #get_all_employees()
 
@@ -129,12 +134,12 @@ def getpartners():
     )
     for response in responses:
         print(response)
-getpartners()
+#getpartners()
 def getchannels():
     responses = models.execute_kw(db, uid, password,
                                  'mail.channel', 'search_read',
-                                 [[]],
-                                 { 'fields': ['name', 'description', 'channel_type', 'public']})
+                                 [[('id','=', 5)]],
+                                 { 'fields': []})
     for response in responses:
         print(response)
 #getchannels()
@@ -151,8 +156,8 @@ def sendMessage(msg, id):
 def getMessages(id):
     messages =  models.execute_kw(db, uid, password,
                 'mail.message', 'search_read',
-                [[('res_id', '=', id), ('model', '=', 'mail.channel')]],  # Filter for the specific channel
-                {'limit': 10})  # Fields you want to retrieve
+                [[('res_id', '=', id),("model", "=", "mail.channel")]],  # Filter for the specific channel
+                {'limit':1})  # Fields you want to retrieve
 
     # Print the retrieved messages
     print(messages)

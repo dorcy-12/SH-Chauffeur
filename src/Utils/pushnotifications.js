@@ -4,6 +4,7 @@ import PushNotification from "react-native-push-notification";
 import { insertMessage } from "../../database";
 import { useMessageContext } from "../../context/MessageContext";
 
+
 export async function requestUserPermission() {
   const authStatus = await messaging().requestPermission();
   const enabled =
@@ -64,12 +65,9 @@ export const NotificationListener = (
 
   messaging()
     .getInitialNotification()
-    .then((remoteMessage) => {
+    .then(async (remoteMessage) => {
       if (remoteMessage) {
-        console.log(
-          "Notification caused app to open from quit state:",
-          remoteMessage.notification
-        );
+        console.log("Notification caused app to open from quit state:");
       }
     });
 
@@ -147,6 +145,14 @@ export const NotificationListener = (
       timestamp,
       attachment_ids,
     } = data;
+    const {
+      message_id,
+      channel_id,
+      author_id,
+      author_name,
+      timestamp,
+      attachment_ids,
+    } = data;
     try {
       await insertMessage(
         parseInt(message_id, 10),
@@ -164,7 +170,7 @@ export const NotificationListener = (
     }
   };
 
-  const displayMessage = async (data) => {
+  const displayMessage = async (data, messageBody) => {
     console.log("in desplay message with" + data);
     const {
       message_id,
@@ -178,7 +184,7 @@ export const NotificationListener = (
     const time = new Date(timestamp);
     const newMessage = {
       _id: parseInt(message_id, 10), // Assuming you have a unique message ID
-      text: message,
+      text: messageBody,
       createdAt: time, // Or use timestamp from the notification data
       user: {
         _id: parseInt(author_id, 10), // Unique ID for the author

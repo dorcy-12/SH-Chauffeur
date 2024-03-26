@@ -23,6 +23,7 @@ import {
 import messaging from "@react-native-firebase/messaging";
 import { initDB, getChannels, getUsers, getUserProfile } from "./database";
 import { MessageProvider, useMessageContext } from "./context/MessageContext";
+import { useService } from "./context/ServiceContext";
 
 PushNotification.configure({
   onRegister: function (token) {
@@ -76,6 +77,7 @@ const App2 = () => {
 
   return (
     <NavigationContainer>
+      <RootNavigator />
       <RootNavigator />
     </NavigationContainer>
   );

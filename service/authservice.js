@@ -136,9 +136,10 @@ export async function fetchVehicleServices(userId, serviceState, password) {
         pin,
         "fleet.vehicle.log.services",
         "search_read",
-        [[["state", "=", serviceState]]],
+        [[['state','=', serviceState]]],
         {
           fields: [
+            "id",
             "service_type_id",
             "vehicle_id",
             "date",
