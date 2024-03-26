@@ -17,6 +17,7 @@ import {
   uploadFirebaseToken,
   fetchAllEmployees,
   getDiscussChannels,
+  deleteUserFirebaseTokens,
 } from "../service/authservice";
 import { AuthContext } from "../context/UserAuth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -48,6 +49,7 @@ function LoginScreen({ navigation }) {
         // Execute fetchEmployeeProfile and fetchPartnerId in parallel
         const { id, name, image_1920, work_email, user_partner_id } =
           await fetchEmployeeProfile(uid, pin);
+        console.log("user partner id is ", user_partner_id);
         const allEmployees = await fetchAllEmployees(uid, pin, id);
 
         if (id) {
@@ -67,14 +69,15 @@ function LoginScreen({ navigation }) {
             uid,
             user_partner_id[0]
           );
-
+          console.log("fcmtoken is ", fcmtoken, "with type ", typeof fcmtoken);
           // Await all promises
           const [uploadResult, remoteChannels] = await Promise.all([
             uploadTokenPromise,
             fetchChannelsPromise,
           ]);
+          await AsyncStorage.setItem("tokenId", String(uploadResult));
           console.log("Firebase token uploaded. Record ID:", uploadResult);
-          console.log("channels retrieved and we have " + remoteChannels)
+          console.log("channels retrieved and we have " + remoteChannels);
           setChannels(remoteChannels);
           if (remoteChannels) {
             const userInsertPromise = allEmployees.map((employee) =>

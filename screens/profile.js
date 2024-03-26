@@ -14,7 +14,7 @@ import { AuthContext } from "../context/UserAuth";
 import { deleteUserFirebaseTokens } from "../service/authservice";
 import * as SecureStore from "expo-secure-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getUserProfile, getUsers } from "../database";
+import { getUserProfile, getUsers, wipeAllTables } from "../database";
 
 const ProfileScreen = ({ navigation }) => {
   const theme = useTheme();
@@ -30,11 +30,14 @@ const ProfileScreen = ({ navigation }) => {
   } = useContext(AuthContext);
 
   const handleLogout = async () => {
-    await deleteUserFirebaseTokens("userId");
+    const tokenId = await AsyncStorage.getItem("tokenId");
+    await wipeAllTables();
+    await deleteUserFirebaseTokens(userId, tokenId);
     await SecureStore.deleteItemAsync("userId");
     await SecureStore.deleteItemAsync("password");
     await SecureStore.deleteItemAsync("employeeId");
     await AsyncStorage.removeItem("token");
+    await AsyncStorage.removeItem("tokenId")
     await AsyncStorage.removeItem("channels");
     setUserId(null);
     setEmployeeId(null);
@@ -52,10 +55,8 @@ const ProfileScreen = ({ navigation }) => {
   useEffect(() => {
     const fetchAndSetUserProfile = async () => {
       try {
-        
         const userProfile = await getUserProfile(employeeId);
-      
-        
+
         if (userProfile) {
           setProfileData({
             name: userProfile.name,
@@ -63,7 +64,6 @@ const ProfileScreen = ({ navigation }) => {
             email: userProfile.email,
           });
         }
-        
       } catch (error) {
         console.error("Error fetching user profile: ", error);
         Alert.alert("Error fetching user profile: ", error);

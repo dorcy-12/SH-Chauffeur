@@ -4,7 +4,10 @@ import { useTheme } from "../context/ThemeContext";
 import { useNavigation } from "@react-navigation/native";
 import { useService } from "../context/ServiceContext";
 import { AuthContext } from "../context/UserAuth";
-import {createEmployeeCheckIn, changeServiceState} from "../service/authservice";
+import {
+  createEmployeeCheckIn,
+  changeServiceState,
+} from "../service/authservice";
 const ServiceDetailCard = ({ service }) => {
   const navigation = useNavigation();
   const theme = useTheme();
@@ -15,41 +18,65 @@ const ServiceDetailCard = ({ service }) => {
   console.log(service);
 
   const handlenavigation = async () => {
-    console.log("userId is" + userId +"employeeId is" + employeeId)
-    const checkin = await createEmployeeCheckIn(employeeId, userId, password );
-    console.log("check in " + checkin)
-    const state = await changeServiceState(userId, service.id, "running", password );  
-    console.log("serviceid " + service.id) 
-    console.log("check state" + state)
-    console.log("employeeId " + employeeId)
-    console.log("userId " + userId)
-    console.log("password " + password)
+    console.log("userId is" + userId + "employeeId is" + employeeId);
+    const checkin = await createEmployeeCheckIn(employeeId, userId, password);
+    console.log("check in " + checkin);
+    const state = await changeServiceState(
+      userId,
+      service.id,
+      "running",
+      password
+    );
+    console.log("serviceid " + service.id);
+    console.log("check state" + state);
+    console.log("employeeId " + employeeId);
+    console.log("userId " + userId);
+    console.log("password " + password);
 
     console.log(state);
-    if (checkin && state){
-      console.log("check in " + checkin)
-      console.log("serviceid " + service.id) 
-      console.log("check state" + state)
-      navigation.navigate("Timer", {"checkinId": checkin, "serviceId":service.id });
+    if (checkin && state) {
+      console.log("check in " + checkin);
+      console.log("serviceid " + service.id);
+      console.log("check state" + state);
+      navigation.navigate("Timer", {
+        checkinId: checkin,
+        serviceId: service.id,
+      });
     }
-   
   };
-  
 
   return (
     <View style={styles.card}>
-      <Text style={styles.title}>{service.service_type_id[1]}</Text>
-      <Text style={styles.highlightedDetail}>
-        Vehicle: {service.vehicle_id[1]}
-      </Text>
-      <Text style={styles.detail}>Date: {service.date}</Text>
-      <Text style={styles.highlightedDetail}>
-        Purchaser: {service.purchaser_id[1]}
-      </Text>
-      <Text style={styles.detail}>State: {service.state}</Text>
-
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          marginBottom: 10,
+        }}
+      >
+        <Text style={styles.highlightedDetail}>Auto: </Text>
+        <Text style={styles.detail}>{service.vehicle_id[1]}</Text>
+      </View>
+      <View
+        style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}
+      >
+        <Text style={styles.highlightedDetail}>Datum: </Text>
+        <Text style={styles.detail}>{service.date}</Text>
+      </View>
+      <View
+        style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}
+      >
+        <Text style={styles.highlightedDetail}>Fahrer: </Text>
+        <Text style={styles.detail}>{service.purchaser_id[1]}</Text>
+      </View>
+      <View
+        style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}
+      >
+        <Text style={styles.highlightedDetail}>Status: </Text>
+        <Text style={styles.detail}>{service.state}</Text>
+      </View>
       <View style={styles.notesContainer}>
-        <Text style={styles.notesTitle}>Notes:</Text>
+        <Text style={styles.notesTitle}>Notizen: </Text>
         <ScrollView style={styles.notesScroll}>
           <Text style={styles.notesText}>{service.notes}</Text>
         </ScrollView>
@@ -74,10 +101,9 @@ const createStyles = (theme) =>
       shadowRadius: 2,
       elevation: 5,
       marginHorizontal: 10,
-      marginTop: 30,
-      marginBottom: 20,
-      // Adjust the height for a longer card
-      minHeight: 300, // Adjust as needed
+      minHeight: 400, // Adjust as needed
+      width:"100%",
+      alignSelf:"center"
     },
     title: {
       fontSize: 24,
@@ -89,16 +115,16 @@ const createStyles = (theme) =>
       fontSize: 18,
       fontWeight: "bold", // Bold to highlight
       color: theme.text,
-      marginBottom: 10,
     },
     detail: {
       fontSize: 16,
       color: theme.secondaryText,
-      marginBottom: 10,
     },
     notesContainer: {
       flex: 1, // Flex to take up available space
       marginTop: 10,
+     
+     
     },
     notesTitle: {
       fontSize: 18,
@@ -107,16 +133,18 @@ const createStyles = (theme) =>
       marginBottom: 5,
     },
     notesScroll: {
-      maxHeight: 100, // Limit height with a scroll view
+      maxHeight: 200, // Limit height with a scroll view
+      backgroundColor:"#ccc",
+      paddingHorizontal:10,
+      paddingVertical:10,
+      borderRadius:10
     },
     notesText: {
       fontSize: 16,
       color: theme.text,
     },
     buttonContainer: {
-      position: "absolute",
-      right: 20,
-      bottom: 20,
+     marginTop:10
     },
   });
 

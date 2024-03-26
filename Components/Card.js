@@ -15,7 +15,6 @@ const Card = ({ vehicleName, serviceType, serviceDate,description }) => {
       </View>
       <View style={styles.cardContent}>
         <View style={styles.serviceInfo}>
-          <Text style={styles.serviceType}>{serviceType}</Text>
           <Text style={styles.descriptionText}>{description}</Text>
         </View>
 

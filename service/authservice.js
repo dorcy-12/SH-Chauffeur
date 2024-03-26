@@ -5,7 +5,7 @@ import * as SecureStore from "expo-secure-store";
 import { insertChannel } from "../database";
 
 // Update with your Odoo server details
-const BASE_URL = "http://217.160.15.116";
+const BASE_URL = "https://sh-odoo.com";
 const DB_NAME = "default_xnqp1odoo";
 export async function loginUser(username, password) {
   const url = `${BASE_URL}/jsonrpc`;
@@ -342,7 +342,7 @@ export async function uploadFirebaseToken(
       args: [
         DB_NAME,
         userId,
-        pin,
+        password,
         "mail.firebase",
         "create",
         [
@@ -367,7 +367,7 @@ export async function uploadFirebaseToken(
     throw error;
   }
 }
-export async function deleteUserFirebaseTokens(userId) {
+export async function deleteUserFirebaseTokens(userId, tokenId) {
   const url = `${BASE_URL}/jsonrpc`;
   const pin = await SecureStore.getItemAsync("password");
   const payload = {
@@ -382,7 +382,7 @@ export async function deleteUserFirebaseTokens(userId) {
         pin,
         "mail.firebase",
         "unlink",
-        [[["user_id", "=", parseInt(userId, 10)]]], // Domain to find tokens by user_id
+        [[parseInt(tokenId, 10)]], // Domain to find tokens by user_id
       ],
     },
     id: Math.floor(Math.random() * 100) + 1,
@@ -392,6 +392,7 @@ export async function deleteUserFirebaseTokens(userId) {
     // Directly delete all token records for the user
     const response = await axios.post(url, payload);
     console.log("Firebase tokens deleted successfully for user:", userId);
+    console.log("response is :", response.data.result);
     return response.data.result; // True if successful
   } catch (error) {
     console.error("Error in deleteUserFirebaseTokens", error);
@@ -609,7 +610,6 @@ export async function fetchVehicles(userId) {
         [[]], // Empty array for matching all records
         {
           fields: ["id", "name", "description", "license_plate"], // Specify the fields you want to retrieve
-
         },
       ],
     },

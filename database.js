@@ -405,3 +405,33 @@ export const getCars = () => {
     });
   });
 };
+
+export const wipeAllTables = () => {
+  return new Promise((resolve, reject) => {
+    db.transaction(
+      (tx) => {
+        const tables = ["Users", "Channels", "Messages", "Cars", "Attachments"];
+        tables.forEach((table) => {
+          tx.executeSql(
+            `DELETE FROM ${table};`,
+            [],
+            () => console.log(`${table} table wiped successfully`),
+            (_, error) => {
+              console.log(`Error wiping ${table} table: `, error);
+              reject(error);
+              return false; // Stop the transaction
+            }
+          );
+        });
+      },
+      (error) => {
+        console.log("Transaction error wiping tables: ", error);
+        reject(error);
+      },
+      () => {
+        console.log("All tables wiped successfully");
+        resolve(true);
+      }
+    );
+  });
+};

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createContext } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
@@ -8,10 +8,14 @@ import PushNotification from "react-native-push-notification";
 import PushNotificationIOS from "@react-native-community/push-notification-ios";
 import * as SecureStore from "expo-secure-store";
 import { AuthContext } from "./context/UserAuth";
-import { ServiceProvider } from "./context/ServiceContext";
+import { ServiceProvider, useService } from "./context/ServiceContext";
 import loading from "./assets/loading.json";
 import LottieView from "lottie-react-native";
 import * as SQLite from "expo-sqlite";
+import {
+  NotificationProvider,
+  NotificationContext,
+} from "./context/NotificationContext";
 import {
   requestUserPermission,
   NotificationListener,
@@ -59,10 +63,12 @@ PushNotification.configure({
 
 const App2 = () => {
   const { addMessage } = useMessageContext();
+  const { addService } = useService();
+  const { updateNotificationCounts } = useContext(NotificationContext);
   useEffect(() => {
     async function setupNotifications() {
       await requestUserPermission();
-      NotificationListener(addMessage);
+      NotificationListener(addMessage, updateNotificationCounts, addService);
     }
 
     setupNotifications();
@@ -70,9 +76,7 @@ const App2 = () => {
 
   return (
     <NavigationContainer>
-      <ServiceProvider>
-        <RootNavigator />
-      </ServiceProvider>
+      <RootNavigator />
     </NavigationContainer>
   );
 };
@@ -93,11 +97,15 @@ export default function App() {
       console.log(uid);
       const password = await SecureStore.getItemAsync("password");
       const employeeId = await SecureStore.getItemAsync("employeeId");
-    
-      console.log("password");
+
+      console.log("password is ", password);
+      console.log("uid is ", uid);
+      console.log("employeeId is ", employeeId);
       if (uid && password) {
         const fetchedChannels = await getChannels();
+        console.log("fetched cahnnes ", fetchedChannels);
         const user = await getUserProfile(employeeId);
+        console.log("fetched user", user);
         const partner = user.partner_id;
         console.log("the partner is " + partner);
         setUserId(uid);
@@ -108,6 +116,7 @@ export default function App() {
         setIsUserLoggedIn(true);
         setIsLoading(false);
       } else {
+        console.log("what is going on");
         initDB((isDbInitialized) => {
           if (isDbInitialized) {
             setIsLoading(false);
@@ -141,22 +150,26 @@ export default function App() {
         setChannels,
       }}
     >
-      <MessageProvider>
-        <ThemeProvider>
-          {isLoading ? (
-            <View style={styles.loadingContainer}>
-              <LottieView
-                source={loading}
-                autoPlay
-                loop
-                style={styles.lottieAnimation}
-              />
-            </View>
-          ) : (
-            <App2 />
-          )}
-        </ThemeProvider>
-      </MessageProvider>
+      <NotificationProvider>
+        <MessageProvider>
+          <ServiceProvider>
+            <ThemeProvider>
+              {isLoading ? (
+                <View style={styles.loadingContainer}>
+                  <LottieView
+                    source={loading}
+                    autoPlay
+                    loop
+                    style={styles.lottieAnimation}
+                  />
+                </View>
+              ) : (
+                <App2 />
+              )}
+            </ThemeProvider>
+          </ServiceProvider>
+        </MessageProvider>
+      </NotificationProvider>
     </AuthContext.Provider>
   );
 }

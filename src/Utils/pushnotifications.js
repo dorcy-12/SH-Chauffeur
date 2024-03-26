@@ -32,7 +32,29 @@ async function GetItemToken() {
   }
 }
 
-export const NotificationListener = (addMessage) => {
+export const NotificationListener = (
+  addMessage,
+  updateNotificationCounts,
+  addService
+) => {
+  messaging().setBackgroundMessageHandler(async (remoteMessage) => {
+    const { title, body } = remoteMessage.notification || {};
+    const { data } = remoteMessage;
+    // Process the message data and store it in the database
+    if (data && data.notification_id == "chat") {
+      //await storeMessage(data, body);
+      let messageCounts =
+        JSON.parse(await AsyncStorage.getItem("messageCounts")) || {};
+      const channelId = parseInt(data.channel_id, 10);
+      messageCounts[channelId] = (messageCounts[channelId] || 0) + 1;
+      await AsyncStorage.setItem(
+        "messageCounts",
+        JSON.stringify(messageCounts)
+      );
+      console.log("Message count updated for channel", channelId);
+    }
+  });
+
   messaging().onNotificationOpenedApp((remoteMessage) => {
     console.log(
       "Notification caused app to open from background state:",
@@ -53,17 +75,35 @@ export const NotificationListener = (addMessage) => {
 
   messaging().onMessage(async (remoteMessage) => {
     const { title, body } = remoteMessage.notification || {};
-    console.log("triggered");
+    const notificationData = remoteMessage.data;
     console.log("Remote notifications on foreground state", remoteMessage);
-    if (remoteMessage.data) {
-      const notificationData = remoteMessage.data.message_id;
-      const parsedData = JSON.parse(notificationData.replace(/'/g, '"'));
-      console.log(parsedData);
-      storeMessage(parsedData,body);
-      await displayMessage(parsedData);
-    }
+    if (notificationData && notificationData.notification_id === "chat") {
+      //storeMessage(notificationData, body);
+      const channelId = parseInt(notificationData.channel_id, 10);
+      await displayMessage(notificationData);
+      updateNotificationCounts("chat", 1, channelId, title, body);
+      //showLocalNotification(title, body);
+    } else if (notificationData.notification_id == "fahrDienst") {
+      const newService = {
+        id: parseInt(notificationData.id, 10),
+        state: notificationData.state,
+        description: notificationData.description,
+        notes: notificationData.notes,
+        date: notificationData.date,
+        purchaser_id: notificationData.purchaser_id
+          ? JSON.parse(notificationData.purchaser_id)
+          : null, // Fallback to null if undefined
+        vehicle_id: notificationData.vehicle_id
+          ? JSON.parse(notificationData.vehicle_id)
+          : null, // Fallback to null if undefined
+      };
+      addService(newService);
 
-    /*
+      console.log("the new service ", newService);
+    }
+  });
+
+  /*
      await insertMessage(
             msg.id,
             currentChannel.id,
@@ -97,11 +137,16 @@ export const NotificationListener = (addMessage) => {
     } else {
       console.log("No notification data found in remoteMessage.");
     }*/
-  });
 
   const storeMessage = async (data, message) => {
-    const { message_id, channel_id, author_id, author_name,timestamp, attachment_ids } =
-      data;
+    const {
+      message_id,
+      channel_id,
+      author_id,
+      author_name,
+      timestamp,
+      attachment_ids,
+    } = data;
     try {
       await insertMessage(
         parseInt(message_id, 10),
