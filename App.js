@@ -23,7 +23,7 @@ import {
 import messaging from "@react-native-firebase/messaging";
 import { initDB, getChannels, getUsers, getUserProfile } from "./database";
 import { MessageProvider, useMessageContext } from "./context/MessageContext";
-import { useService } from "./context/ServiceContext";
+
 
 PushNotification.configure({
   onRegister: function (token) {
@@ -104,6 +104,7 @@ export default function App() {
       console.log("uid is ", uid);
       console.log("employeeId is ", employeeId);
       if (uid && password) {
+        console.log("fetched cahnnes ", fetchedChannels);
         const fetchedChannels = await getChannels();
         console.log("fetched cahnnes ", fetchedChannels);
         const user = await getUserProfile(employeeId);
@@ -123,9 +124,7 @@ export default function App() {
           if (isDbInitialized) {
             setIsLoading(false);
           } else {
-            // Handle database initialization failure
-            console.error("Database initialization failed");
-            // Optionally set a state to show an error message to the user
+            console.error("Database initialization failed")      
           }
         });
       }

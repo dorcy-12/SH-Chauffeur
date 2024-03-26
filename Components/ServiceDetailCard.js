@@ -79,7 +79,7 @@ const ServiceDetailCard = ({ service }) => {
         <Text style={styles.notesTitle}>Notizen: </Text>
         <ScrollView style={styles.notesScroll}>
           <Text style={styles.notesText}>{service.notes}</Text>
-        </View>
+        </ScrollView>
       </View>
 
       <View style={styles.buttonContainer}>
@@ -102,8 +102,8 @@ const createStyles = (theme) =>
       elevation: 5,
       marginHorizontal: 10,
       minHeight: 400, // Adjust as needed
-      width:"100%",
-      alignSelf:"center"
+      width: "100%",
+      alignSelf: "center",
     },
     title: {
       fontSize: 24,
@@ -123,8 +123,6 @@ const createStyles = (theme) =>
     notesContainer: {
       flex: 1, // Flex to take up available space
       marginTop: 10,
-     
-     
     },
     notesTitle: {
       fontSize: 18,
@@ -134,17 +132,17 @@ const createStyles = (theme) =>
     },
     notesScroll: {
       maxHeight: 200, // Limit height with a scroll view
-      backgroundColor:"#ccc",
-      paddingHorizontal:10,
-      paddingVertical:10,
-      borderRadius:10
+      backgroundColor: "#ccc",
+      paddingHorizontal: 10,
+      paddingVertical: 10,
+      borderRadius: 10,
     },
     notesText: {
       fontSize: 16,
       color: theme.text,
     },
     buttonContainer: {
-     marginTop:10
+      marginTop: 10,
     },
   });
 
