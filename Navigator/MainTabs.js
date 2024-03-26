@@ -25,7 +25,6 @@ function MainTabs() {
       <Tab.Screen
         name="home"
         component={HomeScreen}
-        component={HomeScreen}
         options={{
           headerShown: false,
           tabBarLabel: "Home",
