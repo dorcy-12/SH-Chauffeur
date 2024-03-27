@@ -24,7 +24,6 @@ import messaging from "@react-native-firebase/messaging";
 import { initDB, getChannels, getUsers, getUserProfile } from "./database";
 import { MessageProvider, useMessageContext } from "./context/MessageContext";
 
-
 PushNotification.configure({
   onRegister: function (token) {
     console.log("TOKEN:", token);
@@ -78,7 +77,6 @@ const App2 = () => {
   return (
     <NavigationContainer>
       <RootNavigator />
-      <RootNavigator />
     </NavigationContainer>
   );
 };
@@ -100,15 +98,11 @@ export default function App() {
       const password = await SecureStore.getItemAsync("password");
       const employeeId = await SecureStore.getItemAsync("employeeId");
 
-      console.log("password is ", password);
-      console.log("uid is ", uid);
-      console.log("employeeId is ", employeeId);
+      console.log("password");
       if (uid && password) {
-        console.log("fetched cahnnes ", fetchedChannels);
         const fetchedChannels = await getChannels();
         console.log("fetched cahnnes ", fetchedChannels);
         const user = await getUserProfile(employeeId);
-        console.log("fetched user", user);
         const partner = user.partner_id;
         console.log("the partner is " + partner);
         setUserId(uid);
@@ -119,12 +113,11 @@ export default function App() {
         setIsUserLoggedIn(true);
         setIsLoading(false);
       } else {
-        console.log("what is going on");
         initDB((isDbInitialized) => {
           if (isDbInitialized) {
             setIsLoading(false);
           } else {
-            console.error("Database initialization failed")      
+            console.error("Database initialization failed");
           }
         });
       }

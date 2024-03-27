@@ -4,7 +4,6 @@ import PushNotification from "react-native-push-notification";
 import { insertMessage } from "../../database";
 import { useMessageContext } from "../../context/MessageContext";
 
-
 export async function requestUserPermission() {
   const authStatus = await messaging().requestPermission();
   const enabled =
@@ -55,7 +54,6 @@ export const NotificationListener = (
       console.log("Message count updated for channel", channelId);
     }
   });
-
   messaging().onNotificationOpenedApp((remoteMessage) => {
     console.log(
       "Notification caused app to open from background state:",
@@ -74,6 +72,7 @@ export const NotificationListener = (
   messaging().onMessage(async (remoteMessage) => {
     const { title, body } = remoteMessage.notification || {};
     const notificationData = remoteMessage.data;
+    console.log("triggered");
     console.log("Remote notifications on foreground state", remoteMessage);
     if (notificationData && notificationData.notification_id === "chat") {
       //storeMessage(notificationData, body);
@@ -100,51 +99,8 @@ export const NotificationListener = (
       console.log("the new service ", newService);
     }
   });
-
-  /*
-     await insertMessage(
-            msg.id,
-            currentChannel.id,
-            msg.author_id[0],
-            msg.author_id[1],
-            body,
-            msg.date,
-            attachment_ids,
-            msg.author_id[0] == partnerId ? "sent" : "received"
-          );
-    if (remoteMessage.notification) {
-      //const { title, body } = remoteMessage.notification || {};
-    
-      if (remoteMessage.data) {
-        //storeMessage(remoteMessage.data, body);
-        //console.log(remoteMessage.data.message_id);
-        
-      }
-    
-      if (title && body) {
-        console.log("Push notification about to be sent");
-        
-        PushNotification.localNotification({
-          channelId: "timer-channel",
-          id: 1, // Convert to string
-          title: title,
-          message: body,
-        });
-        
-      }
-    } else {
-      console.log("No notification data found in remoteMessage.");
-    }*/
-
+ 
   const storeMessage = async (data, message) => {
-    const {
-      message_id,
-      channel_id,
-      author_id,
-      author_name,
-      timestamp,
-      attachment_ids,
-    } = data;
     const {
       message_id,
       channel_id,

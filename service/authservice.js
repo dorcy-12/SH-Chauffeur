@@ -343,7 +343,7 @@ export async function uploadFirebaseToken(
       args: [
         DB_NAME,
         userId,
-        password,
+        pin,
         "mail.firebase",
         "create",
         [
@@ -368,7 +368,7 @@ export async function uploadFirebaseToken(
     throw error;
   }
 }
-export async function deleteUserFirebaseTokens(userId, tokenId) {
+export async function deleteUserFirebaseTokens(userId) {
   const url = `${BASE_URL}/jsonrpc`;
   const pin = await SecureStore.getItemAsync("password");
   const payload = {
@@ -383,7 +383,7 @@ export async function deleteUserFirebaseTokens(userId, tokenId) {
         pin,
         "mail.firebase",
         "unlink",
-        [[parseInt(tokenId, 10)]], // Domain to find tokens by user_id
+        [[["user_id", "=", parseInt(userId, 10)]]], // Domain to find tokens by user_id
       ],
     },
     id: Math.floor(Math.random() * 100) + 1,
@@ -393,7 +393,6 @@ export async function deleteUserFirebaseTokens(userId, tokenId) {
     // Directly delete all token records for the user
     const response = await axios.post(url, payload);
     console.log("Firebase tokens deleted successfully for user:", userId);
-    console.log("response is :", response.data.result);
     return response.data.result; // True if successful
   } catch (error) {
     console.error("Error in deleteUserFirebaseTokens", error);
@@ -611,6 +610,7 @@ export async function fetchVehicles(userId) {
         [[]], // Empty array for matching all records
         {
           fields: ["id", "name", "description", "license_plate"], // Specify the fields you want to retrieve
+
         },
       ],
     },

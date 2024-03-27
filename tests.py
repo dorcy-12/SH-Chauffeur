@@ -7,12 +7,11 @@ from datetime import datetime
 #info = xmlrpc.client.ServerProxy('https://demo.odoo.com/start', context = context).start()
 #url,db, username, password = info['host'], info['database'], info['user'], info['password']
 
-url = "https://sh-odoo.com"
+url = "http://217.160.15.116"
 db = "default_xnqp1odoo"
-#username = "default@localhost.localdomain"
-#password = "9N*Aj8#tW9"
-username = "h.dorcy@sh-personal.com"
-password = "amatama"
+username = dorcy
+password = dorcypw
+
 common = xmlrpc.client.ServerProxy('{}/xmlrpc/2/common'.format(url))
 uid = common.authenticate(db, username, password, {})
 print(uid)
@@ -31,7 +30,7 @@ def get_all_employees():
     for employee in employees:
         print(employee)
 #
-#get_all_employees()
+get_all_employees()
 
 #models_list = models.execute_kw(
 #    db, uid, password,
@@ -94,8 +93,8 @@ def upsert_firebase_token(partner_id, firebase_token, device_os):
 # Example usage
 partner_id = 12  # Replace with the actual partner ID
 firebase_token = 'ambatam'  # Replace with the actual Firebase token
-device_os = 'androide'  # Example device OS
-upsert_firebase_token(partner_id, firebase_token, device_os)
+device_os = 'Sionooo'  # Example device OS
+#upsert_firebase_token(partner_id, firebase_token, device_os)
 
 message_details = {
     'body': "Hello, this is a test message.",
@@ -216,27 +215,3 @@ def sendAttachment(channel_id):
     print(f"Message sent with attachment ID {767}")
 
 #sendAttachment(5)
-def getVehicleIds():
-    vehicle_details = models.execute_kw(db, uid, password, 'fleet.vehicle', 'search_read', [[]], {'fields': ["id", "name", "description","license_plate"]})
-    return vehicle_details
-
-def getServiceTypeDetails():
-    service_type_details = models.execute_kw(db, uid, password, 'fleet.vehicle.log.services', 'search_read', [[]], {'fields': ['id','purchaser_id','state']})
-    return service_type_details
-
-
-def createService():
-    service_id = models.execute_kw(db, uid, password, 'fleet.vehicle.log.services', 'create', [{
-    'date': '2024-01-01 15:32:22',
-    'vehicle_id': 1, 
-    'description':'helloo',
-    'purchaser_id': 3,
-    'service_type_id': 2
-    
-    }])
-    return service_id
-
-vehicle_ids = getServiceTypeDetails()  # Call the function to get vehicle IDs
-for vehicle in vehicle_ids:
-    print("Vehicle IDs:", vehicle)
-

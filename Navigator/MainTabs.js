@@ -4,9 +4,9 @@ import HomeScreen from "../screens/home";
 import ProfileScreen from "../screens/profile";
 import DocumentsScreen from "../screens/documents";
 import ChatScreen from "../screens/ChatScreen";
-import { NotificationContext } from "../context/NotificationContext";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
+import { NotificationContext } from "../context/NotificationContext";
 const Tab = createBottomTabNavigator();
 
 function MainTabs() {
@@ -18,13 +18,12 @@ function MainTabs() {
         tabBarActiveTintColor: theme.secondary,
         tabBarStyle: {
           backgroundColor: "white",
-        
+          //borderTopColor: "grey", // Set the background color to black
         },
       }}
     >
       <Tab.Screen
         name="home"
-        component={HomeScreen}
         component={HomeScreen}
         options={{
           headerShown: false,

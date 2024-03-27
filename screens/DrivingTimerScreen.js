@@ -12,16 +12,15 @@ import {
 import PushNotification from "react-native-push-notification";
 import LottieView from "lottie-react-native";
 import { useService } from "../context/ServiceContext";
-import { useTheme } from "../context/ThemeContext";
 import {
   createEmployeeCheckOut,
   changeServiceState,
 } from "../service/authservice";
 import { AuthContext } from "../context/UserAuth";
+import { useTheme } from "../context/ThemeContext";
 
 function DrivingTimerScreen({ navigation, route }) {
   const { userId, password, setShouldReloadServices } = useContext(AuthContext);
-  
   const { activeService } = useService();
   useEffect(() => {
     PushNotification.localNotification({
@@ -87,6 +86,7 @@ function DrivingTimerScreen({ navigation, route }) {
   return (
     <View style={styles.container}>
       <View style={styles.animationWrapper}>
+        {/* Lottie Animation */}
         <LottieView
           source={require("../assets/Animation - 1699361565106.json")} // Adjust the path to your Lottie file
           autoPlay
@@ -98,7 +98,6 @@ function DrivingTimerScreen({ navigation, route }) {
         <Text style={styles.detail}>{activeService.description}</Text>
         <Text>{activeService.notes}</Text>
       </View>
-
       <View style={styles.buttonWrapper}>
         <TouchableOpacity
           style={[styles.button, { backgroundColor: "orange" }]}
@@ -118,54 +117,52 @@ function DrivingTimerScreen({ navigation, route }) {
 }
 
 const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: "#F2F2F2",
-      alignItems: "center",
-      paddingTop: (Platform.OS = "android" ? StatusBar.currentHeight : 0),
-    },
-    animationWrapper: {
-      width: 200, // Adjust size as needed
-      height: 200, // Adjust size as needed
-      marginTop: 100,
-      marginBottom: 40,
-    },
-    infoContainer: {
-      marginBottom: 20,
-    },
-    infoText: {
-      fontSize: 18,
-      color: "#333333",
-      marginBottom: 10,
-    },
-    buttonWrapper: {
-      flexDirection: "row",
-      justifyContent: "space-around",
-      width: "100%",
-      paddingHorizontal: 40,
-    },
-    button: {
-      backgroundColor: "#333333",
-      borderRadius: 25,
-      width: 100,
-      height: 100,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    buttonText: {
-      color: "#FFFFFF",
-      fontSize: 18,
-    },
-    title: {
-      fontSize: 24,
-      fontWeight: "bold", // Bold to highlight
-    
-    },
-    detail: {
-      fontSize: 16,
-      fontWeight: "400", // Bold to highlight
-     
-    },
-  });
+  container: {
+    flex: 1,
+    backgroundColor: "#F2F2F2",
+    alignItems: "center",
+    paddingTop: Platform.OS == "android" ? StatusBar.currentHeight : 0,
+  },
+  animationWrapper: {
+    width: 200, // Adjust size as needed
+    height: 200, // Adjust size as needed
+    marginTop: 100, // Adjust size as needed
+    marginBottom: 40,
+  },
+  infoContainer: {
+    marginBottom: 20,
+  },
+  infoText: {
+    fontSize: 18,
+    color: "#333333",
+    marginBottom: 10,
+  },
+  buttonWrapper: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    width: "100%",
+    paddingHorizontal: 40,
+  },
+  button: {
+    backgroundColor: "#333333",
+    borderRadius: 25,
+    width: 100,
+    height: 100,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  buttonText: {
+    color: "#FFFFFF",
+    fontSize: 18,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold", // Bold to highlight
+  },
+  detail: {
+    fontSize: 16,
+    fontWeight: "400", // Bold to highlight
+  },
+});
 
 export default DrivingTimerScreen;

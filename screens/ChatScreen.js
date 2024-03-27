@@ -52,12 +52,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useIsFocused } from "@react-navigation/native";
 import { NotificationContext } from "../context/NotificationContext";
 
-import { createChannel } from "../service/authservice";
-import { insertChannel } from "../database";
-
 const { width, height } = Dimensions.get("window");
-
-const ChatScreen = ({ navigation }) => {
+const ChatScreen = () => {
   const {
     notificationCounts,
     updateNotificationCounts,
@@ -66,13 +62,13 @@ const ChatScreen = ({ navigation }) => {
     resetNotificationCounts,
   } = useContext(NotificationContext);
   const isFocused = useIsFocused();
-  const { messages, addMessage } = useMessageContext();
   const [employees, setEmployees] = useState([]);
+  const { messages, addMessage } = useMessageContext();
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const theme = useTheme();
   const styles = createStyles(theme);
   const sidebarX = useRef(new Animated.Value(-width * 0.7)).current;
-  const { userId, channels, setChannels, partnerId, employeeName, employeeId } =
+  const { userId, channels, setChannels, partnerId, employeeId } =
     useContext(AuthContext);
   const [currentChannel, setCurrentChannel] = useState(channels[0]);
   const [isLoading, setIsLoading] = useState(true);
@@ -89,7 +85,6 @@ const ChatScreen = ({ navigation }) => {
   const [newChannelName, setNewChannelName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(null);
-
   useEffect(() => {
     const targetValue = sidebarVisible ? 0 : -width * 0.7;
     Animated.timing(sidebarX, {
@@ -98,7 +93,6 @@ const ChatScreen = ({ navigation }) => {
       useNativeDriver: true, // Changed to true as we're animating transform
     }).start();
   }, [sidebarVisible]);
-
   useEffect(() => {
     if (isFocused) {
       setCurrentScreen("chat");
@@ -118,7 +112,6 @@ const ChatScreen = ({ navigation }) => {
 
     console.log("is focused iin chat is ", isFocused);
   }, [isFocused]);
-
   useEffect(() => {
     const reloadChannels = async () => {
       const messageCounts =
@@ -166,7 +159,6 @@ const ChatScreen = ({ navigation }) => {
       subscription.remove();
     };
   }, [currentChannel]);
-
   useEffect(() => {
     const fetchEmployees = () => {
       getUsers()
@@ -195,8 +187,6 @@ const ChatScreen = ({ navigation }) => {
         const reversedServerMessages = serverMessages.reverse();
         reversedServerMessages.map((msg) => {
           const body = msg.body.replace(/<\/?[^>]+(>|$)/g, "");
-          //const attachment_ids = JSON.stringify(msg.attachment_ids || []);
-
           const newMessage = {
             _id: msg.id,
             text: body,
@@ -235,6 +225,7 @@ const ChatScreen = ({ navigation }) => {
       setIsLoading(false);
     }
   };
+
   const renderChannelName = (channel) => {
     if (channel.channel_type === "chat") {
       return getOtherPersonName(channel.name, currentUser.name);
@@ -262,6 +253,7 @@ const ChatScreen = ({ navigation }) => {
   const selectChannel = (channel) => {
     setCurrentChannel(channel);
     setSidebarVisible(false);
+    console.log(channel);
   };
 
   const renderSend = (props) => {
@@ -466,6 +458,7 @@ const ChatScreen = ({ navigation }) => {
           </View>
         </View>
       </Modal>
+
       <View
         style={{
           flex: 1,
@@ -626,10 +619,11 @@ const createStyles = (theme) =>
       alignItems: "center",
       paddingRight: 30,
     },
+
     menu: {
       flexDirection: "row",
       alignItems: "center",
-      //zIndex: 2,
+      zIndex: 2,
       backgroundColor: "#F2F2F2",
       paddingVertical: 10,
       paddingHorizontal: 20,
@@ -656,7 +650,7 @@ const createStyles = (theme) =>
       justifyContent: "space-between",
     },
     channelHeaderText: {
-      fontSize: 18,
+      fontSize: 25,
       fontWeight: "600",
       color: "#a1a1a1",
     },
@@ -773,8 +767,6 @@ const createStyles = (theme) =>
       marginTop: 20,
       alignItems: "flex-end",
     },
-
-    // Additional styles...
   });
 
 export default ChatScreen;

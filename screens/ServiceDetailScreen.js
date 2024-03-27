@@ -21,7 +21,7 @@ const createStyles = (theme) =>
     container: {
       flex: 1,
       justifyContent: "center", // Aligns children vertically in the middle
-      paddingHorizontal: 20,
+      paddingHorizontal: 20, // Aligns children horizontally in the middle
       backgroundColor: theme.secondary, // Add padding to prevent the card from touching the screen edges
     },
   });

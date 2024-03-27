@@ -16,6 +16,7 @@ import { useTheme } from "../context/ThemeContext";
 import { fetchVehicleServices } from "../service/authservice";
 import { useService } from "../context/ServiceContext";
 import { AuthContext } from "../context/UserAuth";
+import * as SecureStore from "expo-secure-store";
 import LottieView from "lottie-react-native";
 import PushNotification from "react-native-push-notification";
 
@@ -24,16 +25,15 @@ function HomeScreen({ navigation }) {
   const styles = createStyles(theme);
   const { activeService, setActiveService, services, setServices } =
     useService();
-  const { activeService, setActiveService, services, setServices } =
-    useService();
   const [refreshing, setRefreshing] = useState(false); // Add this line
   const { setIsUserLoggedIn, userId, password } = useContext(AuthContext);
-  const { setIsUserLoggedIn, userId, password } = useContext(AuthContext);
   const [isLoading, setIsLoading] = useState(false);
+
   const { shouldReloadServices, setShouldReloadServices } =
     useContext(AuthContext);
 
   useEffect(() => {
+  
     PushNotification.createChannel(
       {
         channelId: "timer-channel", // (required)
@@ -48,7 +48,9 @@ function HomeScreen({ navigation }) {
   }, []);
 
   const loadServices = async () => {
+    setIsLoading(true);
     try {
+      // Assuming vehicleId is available or retrieved from context/user input
       const fetchedServices = await fetchVehicleServices(
         userId,
         "todo",
@@ -105,7 +107,7 @@ function HomeScreen({ navigation }) {
               <TouchableOpacity
                 onPress={() => {
                   setActiveService(item);
-                  navigation.navigate("Timer");
+                  navigation.navigate("ServiceDetailScreen");
                 }}
               >
                 <Card

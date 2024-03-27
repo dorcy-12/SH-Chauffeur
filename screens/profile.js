@@ -38,14 +38,12 @@ const ProfileScreen = ({ navigation }) => {
     await SecureStore.deleteItemAsync("password");
     await SecureStore.deleteItemAsync("employeeId");
     await AsyncStorage.removeItem("token");
-    await AsyncStorage.removeItem("tokenId")
     await AsyncStorage.removeItem("channels");
     setUserId(null);
     setEmployeeId(null);
     setPassword(null);
     setIsUserLoggedIn(false);
     // Clear other sensitive data as needed
-    */
   };
 
   const [profileData, setProfileData] = useState({

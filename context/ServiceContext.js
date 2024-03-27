@@ -1,6 +1,5 @@
 import React, { createContext, useState, useContext } from "react";
 
-
 const ServiceContext = createContext();
 
 export const ServiceProvider = ({ children }) => {
@@ -12,7 +11,6 @@ export const ServiceProvider = ({ children }) => {
   };
 
   return (
-  
     <ServiceContext.Provider
       value={{
         services,
