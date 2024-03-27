@@ -145,7 +145,14 @@ export const NotificationListener = (
       timestamp,
       attachment_ids,
     } = data;
-  
+    const {
+      message_id,
+      channel_id,
+      author_id,
+      author_name,
+      timestamp,
+      attachment_ids,
+    } = data;
     try {
       await insertMessage(
         parseInt(message_id, 10),

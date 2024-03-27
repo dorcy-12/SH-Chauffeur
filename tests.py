@@ -43,7 +43,7 @@ def get_all_employees():
 {'id': 2, 'partner_id': [3, 'Administrator']}
 {'id': 8, 'partner_id': [12, 'Dorcy Agape Hakizimana']}
 {'id': 9, 'partner_id': [13, 'frank kukiki']}
-
+"""
 
 #get_all_employees()
 

@@ -24,10 +24,11 @@ function HomeScreen({ navigation }) {
   const styles = createStyles(theme);
   const { activeService, setActiveService, services, setServices } =
     useService();
-
+  const { activeService, setActiveService, services, setServices } =
+    useService();
   const [refreshing, setRefreshing] = useState(false); // Add this line
   const { setIsUserLoggedIn, userId, password } = useContext(AuthContext);
-
+  const { setIsUserLoggedIn, userId, password } = useContext(AuthContext);
   const [isLoading, setIsLoading] = useState(false);
   const { shouldReloadServices, setShouldReloadServices } =
     useContext(AuthContext);

@@ -45,7 +45,7 @@ const ProfileScreen = ({ navigation }) => {
     setPassword(null);
     setIsUserLoggedIn(false);
     // Clear other sensitive data as needed
-
+    */
   };
 
   const [profileData, setProfileData] = useState({
