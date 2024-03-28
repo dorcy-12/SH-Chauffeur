@@ -63,12 +63,18 @@ PushNotification.configure({
 
 const App2 = () => {
   const { addMessage } = useMessageContext();
-  const { addService } = useService();
+  const { addService, updateService, deleteService } = useService();
   const { updateNotificationCounts } = useContext(NotificationContext);
   useEffect(() => {
     async function setupNotifications() {
       await requestUserPermission();
-      NotificationListener(addMessage, updateNotificationCounts, addService);
+      NotificationListener(
+        addMessage,
+        updateNotificationCounts,
+        addService,
+        updateService,
+        deleteService
+      );
     }
 
     setupNotifications();

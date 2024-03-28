@@ -9,7 +9,19 @@ export const ServiceProvider = ({ children }) => {
   const addService = (newService) => {
     setServices((prevServices) => [...prevServices, newService]);
   };
+  const updateService = (updatedService) => {
+    setServices((prevServices) =>
+      prevServices.map((service) =>
+        service.id === updatedService.id
+          ? { ...service, ...updatedService }
+          : service
+      )
+    );
+  };
 
+  const deleteService = (serviceId) => {
+    setServices((prevServices) => prevServices.filter((service) => service.id !== serviceId));
+  };
   return (
     <ServiceContext.Provider
       value={{
@@ -18,6 +30,8 @@ export const ServiceProvider = ({ children }) => {
         setActiveService,
         setServices,
         addService,
+        updateService,
+        deleteService
       }}
     >
       {children}

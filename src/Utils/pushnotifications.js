@@ -35,7 +35,9 @@ async function GetItemToken() {
 export const NotificationListener = (
   addMessage,
   updateNotificationCounts,
-  addService
+  addService,
+  updateService,
+  deleteService
 ) => {
   messaging().setBackgroundMessageHandler(async (remoteMessage) => {
     const { title, body } = remoteMessage.notification || {};
@@ -97,9 +99,36 @@ export const NotificationListener = (
       addService(newService);
 
       console.log("the new service ", newService);
+    } else if (notificationData.notification_id == "update") {
+      console.log("update api called", notificationData);
+      const newService = {
+        id: parseInt(notificationData.id, 10),
+        state: notificationData.state,
+        description: notificationData.description,
+        notes: notificationData.notes,
+        date: notificationData.date,
+        purchaser_id: notificationData.purchaser_id
+          ? JSON.parse(notificationData.purchaser_id)
+          : null, // Fallback to null if undefined
+        vehicle_id: notificationData.vehicle_id
+          ? JSON.parse(notificationData.vehicle_id)
+          : null, // Fallback to null if undefined
+      };
+      updateService(newService);
+    } else if (notificationData.notification_id == "delete") {
+      console.log("delete api called", notificationData);
+      deleteService(parseInt(notificationData.id, 10));
+    } else if (notificationData.notification_id == "create_employee") {
+      console.log("employee created ", notificationData);
+    } else if (notificationData.notification_id == "update_employee") {
+      console.log("employee updated ", notificationData);
+    } else if (notificationData.notification_id == "delete_employee") {
+      console.log("employee deleted ", notificationData);
+    } else if (notificationData.notification_id == "subscribed_to_channel") {
+    } else if (notificationData.notification_id == "unsubscribed_from_channel") {
     }
   });
- 
+
   const storeMessage = async (data, message) => {
     const {
       message_id,
