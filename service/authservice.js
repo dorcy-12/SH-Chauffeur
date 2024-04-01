@@ -136,7 +136,7 @@ export async function fetchVehicleServices(userId, serviceState, password) {
         pin,
         "fleet.vehicle.log.services",
         "search_read",
-        [[['state','=', serviceState]]],
+        [[["state", "=", serviceState]]],
         {
           fields: [
             "id",
@@ -470,7 +470,7 @@ export async function sendMessage(userId, channel_id, msg, attachment_id) {
     throw error;
   }
 }
-export async function getServerMessages(userId, channel_id, limit) {
+export async function getServerMessages(userId, channel_id, limit, offset = 0) {
   const url = `${BASE_URL}/jsonrpc`;
   const pin = await SecureStore.getItemAsync("password");
 
@@ -495,6 +495,7 @@ export async function getServerMessages(userId, channel_id, limit) {
         {
           fields: ["id", "body", "date", "author_id", "attachment_ids"],
           limit: limit,
+          offset: offset,
         },
       ],
     },
@@ -610,7 +611,6 @@ export async function fetchVehicles(userId) {
         [[]], // Empty array for matching all records
         {
           fields: ["id", "name", "description", "license_plate"], // Specify the fields you want to retrieve
-
         },
       ],
     },
@@ -624,6 +624,39 @@ export async function fetchVehicles(userId) {
     return Vehicles;
   } catch (error) {
     console.error("Error in fetch Vehicles", error);
+    throw error;
+  }
+}
+
+export async function countNewMessages(userId, channelId, lastKnownMessageId) {
+  const url = `${BASE_URL}/jsonrpc`;
+  const pin = await SecureStore.getItemAsync("password");
+
+  const payload = {
+    jsonrpc: "2.0",
+    method: "call",
+    params: {
+      service: "object",
+      method: "execute_kw",
+      args: [
+        DB_NAME,
+        userId,
+        pin,
+        "mail.channel",
+        "count_new_messages",
+        [channelId, lastKnownMessageId], // Adjusted to fit the expected parameters
+      ],
+    },
+    id: Math.floor(Math.random() * 100),
+  };
+
+  try {
+    const response = await axios.post(url, payload);
+    const res = response.data.result;
+    console.log("Count of new messages successfully retrieved", res);
+    return res; // Return the count of new messages
+  } catch (error) {
+    console.error("Error fetching count of new messages", error);
     throw error;
   }
 }

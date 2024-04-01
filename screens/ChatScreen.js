@@ -37,6 +37,7 @@ import {
   getDiscussChannels,
   sendMessage,
   getServerMessages,
+  countNewMessages,
 } from "../service/authservice";
 import { useMessageContext } from "../context/MessageContext";
 import {
@@ -46,11 +47,14 @@ import {
   wipeMessagesTable,
   getAllMessages,
   getUsers,
+  getLatestLocalMessageId,
+  getEarlierMessages,
 } from "../database";
 import LottieView from "lottie-react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useIsFocused } from "@react-navigation/native";
 import { NotificationContext } from "../context/NotificationContext";
+import { channel } from "expo-updates";
 
 const { width, height } = Dimensions.get("window");
 const ChatScreen = () => {
@@ -63,7 +67,7 @@ const ChatScreen = () => {
   } = useContext(NotificationContext);
   const isFocused = useIsFocused();
   const [employees, setEmployees] = useState([]);
-  const { messages, addMessage } = useMessageContext();
+  const { messages, addMessage, prependMessages } = useMessageContext();
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const theme = useTheme();
   const styles = createStyles(theme);
@@ -85,6 +89,9 @@ const ChatScreen = () => {
   const [newChannelName, setNewChannelName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(null);
+  const [isLoadingEarlier, setIsLoadingEarlier] = useState(false);
+  const [hasMoreToLoad, setHasMoreToLoad] = useState({});
+  const [offset, setOffset] = useState(20);
   useEffect(() => {
     const targetValue = sidebarVisible ? 0 : -width * 0.7;
     Animated.timing(sidebarX, {
@@ -132,9 +139,13 @@ const ChatScreen = () => {
           ...prev,
           [currentChannel.id]: false,
         }));
+        setHasMoreToLoad((prev) => ({
+          ...prev,
+          [currentChannel.id]: true,
+        }));
       } else if (newMessageCount > 0) {
         console.log("fetching only new ");
-        await fetchAndStoreMessages(currentChannel.id, newMessageCount);
+        await fetchAndStoreMessages(currentChannel.id, newMessageCount); // not sure if this is needed since background
         // Remove the current channel ID from the reload list
         messageCounts[channelId] = 0;
         await AsyncStorage.setItem(
@@ -159,6 +170,7 @@ const ChatScreen = () => {
       subscription.remove();
     };
   }, [currentChannel]);
+
   useEffect(() => {
     const fetchEmployees = () => {
       getUsers()
@@ -185,9 +197,9 @@ const ChatScreen = () => {
 
       if (!replace) {
         const reversedServerMessages = serverMessages.reverse();
-        reversedServerMessages.map((msg) => {
+        const newMessages = reversedServerMessages.map((msg) => {
           const body = msg.body.replace(/<\/?[^>]+(>|$)/g, "");
-          const newMessage = {
+          return {
             _id: msg.id,
             text: body,
             createdAt: new Date(msg.date),
@@ -197,9 +209,8 @@ const ChatScreen = () => {
             },
             // Include other properties if needed
           };
-          // Update the UI
-          addMessage(channel_id, [newMessage]);
         });
+        addMessage(channel_id, [newMessages]);
       } else {
         const newMessages = serverMessages.map((msg) => {
           const body = msg.body.replace(/<\/?[^>]+(>|$)/g, "");
@@ -411,6 +422,52 @@ const ChatScreen = () => {
     }
   };
 
+  const fetchEarlierMessages = async () => {
+    if (!hasMoreToLoad[currentChannel.id]) return;
+
+    setIsLoadingEarlier(true);
+
+    const msgLength = messages[currentChannel.id].length;
+
+    const earlierMessages = await getServerMessages(
+      userId,
+      currentChannel.id,
+      20,
+      msgLength
+    );
+
+    if (earlierMessages.length > 0) {
+      //format the messages first in gifted chat syntax
+      const newMessages = earlierMessages.map((msg) => {
+        const body = msg.body.replace(/<\/?[^>]+(>|$)/g, "");
+        return {
+          _id: msg.id,
+          text: body,
+          createdAt: new Date(msg.date),
+          user: {
+            _id: msg.author_id[0],
+            name: msg.author_id[1], // Assuming this is the author's name
+          },
+        };
+      });
+
+      //prepend the messages
+      await prependMessages(currentChannel.id, newMessages);
+
+      if (earlierMessages.length < 20) {
+        // Assuming 20 is your standard fetch size
+        setHasMoreToLoad((prev) => ({ ...prev, [currentChannel.id]: false }));
+      }
+    } else {
+      setHasMoreToLoad(prevState => ({
+        ...prevState,
+        [currentChannel.idh]: false
+      }));// No more messages to load
+    }
+
+    setIsLoadingEarlier(false);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <Modal
@@ -598,6 +655,9 @@ const ChatScreen = () => {
                 renderComposer={renderComposer}
                 renderChatFooter={renderChatFooter}
                 renderBubble={renderBubble}
+                loadEarlier={hasMoreToLoad[currentChannel.id]} // Show load earlier button
+                isLoadingEarlier={isLoadingEarlier} // Show loading indicator when fetching earlier messages
+                onLoadEarlier={fetchEarlierMessages}
               />
             </View>
           )}

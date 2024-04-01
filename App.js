@@ -64,6 +64,7 @@ PushNotification.configure({
 const App2 = () => {
   const { addMessage } = useMessageContext();
   const { addService, updateService, deleteService } = useService();
+  const {channels, setChannels} = useContext(AuthContext)
   const { updateNotificationCounts } = useContext(NotificationContext);
   useEffect(() => {
     async function setupNotifications() {
@@ -73,7 +74,9 @@ const App2 = () => {
         updateNotificationCounts,
         addService,
         updateService,
-        deleteService
+        deleteService,
+        channels,
+        setChannels
       );
     }
 
@@ -94,7 +97,7 @@ export default function App() {
   const [employeeId, setEmployeeId] = useState(null);
   const [password, setPassword] = useState(null);
   const [shouldReloadServices, setShouldReloadServices] = useState(false);
-  const [channels, setChannels] = useState(null);
+  const [channels, setChannels] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {

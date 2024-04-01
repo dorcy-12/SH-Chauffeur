@@ -1,7 +1,14 @@
 import messaging from "@react-native-firebase/messaging";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import PushNotification from "react-native-push-notification";
-import { insertMessage } from "../../database";
+import {
+  insertMessage,
+  insertChannel,
+  deleteChannel,
+  insertUser,
+  deleteUser,
+  updateUserName,
+} from "../../database";
 import { useMessageContext } from "../../context/MessageContext";
 
 export async function requestUserPermission() {
@@ -37,7 +44,9 @@ export const NotificationListener = (
   updateNotificationCounts,
   addService,
   updateService,
-  deleteService
+  deleteService,
+  channels,
+  setChannels
 ) => {
   messaging().setBackgroundMessageHandler(async (remoteMessage) => {
     const { title, body } = remoteMessage.notification || {};
@@ -120,12 +129,38 @@ export const NotificationListener = (
       deleteService(parseInt(notificationData.id, 10));
     } else if (notificationData.notification_id == "create_employee") {
       console.log("employee created ", notificationData);
+      insertUser(
+        parseInt(notificationData.employee_id, 10),
+        parseInt(notificationData.partner_id, 10),
+        notificationData.name
+      );
     } else if (notificationData.notification_id == "update_employee") {
       console.log("employee updated ", notificationData);
     } else if (notificationData.notification_id == "delete_employee") {
       console.log("employee deleted ", notificationData);
     } else if (notificationData.notification_id == "subscribed_to_channel") {
-    } else if (notificationData.notification_id == "unsubscribed_from_channel") {
+      const channel = {
+        id: parseInt(notificationData.id, 10),
+        name: notificationData.name,
+        description: notificationData.description,
+        channel_type: notificationData.channel_type,
+      };
+      setChannels((prevChannels) => [...prevChannels, channel]);
+      insertChannel(
+        parseInt(notificationData.id, 10),
+        notificationData.name,
+        notificationData.description,
+        notificationData.channel_type
+      );
+    } else if (
+      notificationData.notification_id == "unsubscribed_from_channel"
+    ) {
+      setChannels((prevChannels) =>
+        prevChannels.filter(
+          (channel) => channel.id !== parseInt(notificationData.id, 10)
+        )
+      );
+      deleteChannel(parseInt(notificationData.id, 10));
     }
   });
 
@@ -155,7 +190,7 @@ export const NotificationListener = (
     }
   };
 
-  const displayMessage = async (data, messageBody) => {
+  const displayMessage = async (data) => {
     console.log("in desplay message with" + data);
     const {
       message_id,
@@ -169,7 +204,7 @@ export const NotificationListener = (
     const time = new Date(timestamp);
     const newMessage = {
       _id: parseInt(message_id, 10), // Assuming you have a unique message ID
-      text: messageBody,
+      text: message,
       createdAt: time, // Or use timestamp from the notification data
       user: {
         _id: parseInt(author_id, 10), // Unique ID for the author

@@ -69,33 +69,6 @@ export const initDB = (callback) => {
 
   db.transaction((tx) => {
     tx.executeSql(
-      "CREATE TABLE IF NOT EXISTS Messages (" +
-        "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-        "odoo_message_id INTEGER UNIQUE, " +
-        "channel_id INTEGER, " +
-        "partner_id INTEGER, " +
-        "username VARCHAR(30), " +
-        "message TEXT, " +
-        "timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, " +
-        "attachment_ids TEXT," +
-        "status TEXT CHECK(status IN ('sent', 'received', 'pending')) DEFAULT 'pending', " +
-        "FOREIGN KEY (channel_id) REFERENCES Channels(id)," +
-        "FOREIGN KEY (partner_id) REFERENCES Users(partner_id)" +
-        ");",
-      [],
-      () => {
-        tableCreated();
-        console.log("Messages table created successfully");
-      },
-      (_, error) => {
-        tableCreationFailed(error);
-        console.log("Error creating Messages table: " + error);
-      }
-    );
-  });
-
-  db.transaction((tx) => {
-    tx.executeSql(
       "CREATE TABLE IF NOT EXISTS Cars (" +
         "id INTEGER PRIMARY KEY NOT NULL, " +
         "name VARCHAR(100), " +
@@ -110,28 +83,6 @@ export const initDB = (callback) => {
       (_, error) => {
         tableCreationFailed(error);
         console.log("Error creating Cars table: " + error);
-      }
-    );
-  });
-
-  db.transaction((tx) => {
-    tx.executeSql(
-      "CREATE TABLE IF NOT EXISTS Attachments (" +
-        "attachment_id INTEGER PRIMARY KEY NOT NULL, " +
-        "odoo_attachment_id INTEGER UNIQUE, " +
-        "message_id INTEGER, " +
-        "file_type VARCHAR(50), " +
-        "file_url TEXT," +
-        "FOREIGN KEY (message_id) REFERENCES Messages(message_id)" +
-        ");",
-      [],
-      () => {
-        tableCreated();
-        console.log("Attachments table created successfully");
-      },
-      (_, error) => {
-        tableCreationFailed(error);
-        console.log("Error creating Attachments table: " + error);
       }
     );
   });
@@ -174,6 +125,34 @@ export const insertUser = (
     });
   });
 };
+export const deleteUser = (userId) => {
+  return new Promise((resolve, reject) => {
+    db.transaction(
+      (tx) => {
+        tx.executeSql(
+          "DELETE FROM Users WHERE id = ?;",
+          [channelId],
+          (_, result) => {
+            console.log("User deleted successfully", result);
+            resolve(result);
+          },
+          (_, error) => {
+            console.log("Error deleting User: ", error);
+            reject(error);
+          }
+        );
+      },
+      (error) => {
+        console.log("Transaction error on deleting User: ", error);
+        reject(error);
+      },
+      () => {
+        console.log("User deletion transaction successful");
+        resolve(true);
+      }
+    );
+  });
+};
 
 // Retrieve users from the Users table
 export const getUsers = () => {
@@ -194,6 +173,35 @@ export const getUsers = () => {
     });
   });
 };
+export const updateUserName = (employee_id, newName) => {
+  return new Promise((resolve, reject) => {
+    db.transaction(
+      (tx) => {
+        tx.executeSql(
+          "UPDATE Users SET name = ? WHERE employee_id = ?;",
+          [newName, employee_id],
+          (_, result) => {
+            console.log("User name updated successfully", result);
+            resolve(result);
+          },
+          (_, error) => {
+            console.log("Error updating user name: ", error);
+            reject(error);
+          }
+        );
+      },
+      (error) => {
+        console.log("Transaction error on updating user name: ", error);
+        reject(error);
+      },
+      () => {
+        console.log("User name update transaction successful");
+        resolve(true);
+      }
+    );
+  });
+};
+
 export const getUserProfile = (employeeId) => {
   return new Promise((resolve, reject) => {
     db.transaction((tx) => {
@@ -250,6 +258,34 @@ export const insertChannel = (channel_id, name, description, channel_type) => {
     });
   });
 };
+export const deleteChannel = (channelId) => {
+  return new Promise((resolve, reject) => {
+    db.transaction(
+      (tx) => {
+        tx.executeSql(
+          "DELETE FROM Channels WHERE id = ?;",
+          [channelId],
+          (_, result) => {
+            console.log("Channel deleted successfully", result);
+            resolve(result);
+          },
+          (_, error) => {
+            console.log("Error deleting channel: ", error);
+            reject(error);
+          }
+        );
+      },
+      (error) => {
+        console.log("Transaction error on deleting channel: ", error);
+        reject(error);
+      },
+      () => {
+        console.log("Channel deletion transaction successful");
+        resolve(true);
+      }
+    );
+  });
+};
 
 export const getChannels = () => {
   return new Promise((resolve, reject) => {
@@ -263,105 +299,6 @@ export const getChannels = () => {
         },
         (_, error) => {
           console.log("Error retrieving Channels: ", error);
-          reject(error);
-        }
-      );
-    });
-  });
-};
-export const insertMessage = (
-  odoo_message_id,
-  channel_id,
-  partner_id,
-  username,
-  message,
-  timestamp,
-  attachment_ids,
-  status = "pending"
-) => {
-  console.log("insertMessage called");
-  return new Promise((resolve, reject) => {
-    db.transaction((tx) => {
-      tx.executeSql(
-        "INSERT INTO Messages (odoo_message_id, channel_id, partner_id, username, message, timestamp, attachment_ids,status) VALUES (?, ?, ?, ?, ?, ?, ?, ?);",
-        [
-          odoo_message_id,
-          channel_id,
-          partner_id,
-          username,
-          message,
-          timestamp,
-          attachment_ids,
-          status,
-        ],
-        (_, resultSet) => {
-          console.log("Message added successfully", resultSet);
-          resolve(resultSet);
-        },
-        (_, error) => {
-          console.log("Error adding message: ", error);
-          reject(error);
-        }
-      );
-    });
-  });
-};
-export const getLocalMessages = (channel_id) => {
-  return new Promise((resolve, reject) => {
-    db.transaction((tx) => {
-      tx.executeSql(
-        "SELECT * FROM Messages WHERE channel_id = ? ORDER BY timestamp DESC;", // Added ORDER BY clause
-        [channel_id],
-        (_, { rows }) => {
-          console.log("Messages: ", rows._array);
-          resolve(rows._array);
-        },
-        (_, error) => {
-          console.log("Error retrieving messages: ", error);
-          reject(error);
-        }
-      );
-    });
-  });
-};
-export const insertAttachment = (
-  attachment_id,
-  odoo_attachment_id,
-  message_id,
-  file_type,
-  file_url
-) => {
-  db.transaction((tx) => {
-    tx.executeSql(
-      "INSERT INTO Attachments (attachment_id, odoo_attachment_id, message_id, file_type, file_url) VALUES (?, ?, ?, ?, ?);",
-      [attachment_id, odoo_attachment_id, message_id, file_type, file_url],
-      (_, resultSet) => console.log("Attachment added successfully", resultSet),
-      (_, error) => console.log("Error adding attachment: ", error)
-    );
-  });
-};
-export const getAttachments = (message_id) => {
-  db.transaction((tx) => {
-    tx.executeSql(
-      "SELECT * FROM Attachments WHERE message_id = ?;",
-      [message_id],
-      (_, { rows }) => console.log("Attachments: ", rows._array),
-      (_, error) => console.log("Error retrieving attachments: ", error)
-    );
-  });
-};
-export const wipeMessagesTable = () => {
-  return new Promise((resolve, reject) => {
-    db.transaction((tx) => {
-      tx.executeSql(
-        "DELETE FROM Messages;",
-        [],
-        (_, resultSet) => {
-          console.log("Messages table wiped successfully");
-          resolve(resultSet);
-        },
-        (_, error) => {
-          console.log("Error wiping Messages table: ", error);
           reject(error);
         }
       );
@@ -409,7 +346,7 @@ export const wipeAllTables = () => {
   return new Promise((resolve, reject) => {
     db.transaction(
       (tx) => {
-        const tables = ["Users", "Channels", "Messages", "Cars", "Attachments"];
+        const tables = ["Users", "Channels", "Cars"];
         tables.forEach((table) => {
           tx.executeSql(
             `DELETE FROM ${table};`,
