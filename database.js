@@ -4,7 +4,7 @@ const db = SQLite.openDatabase("MyDatabase.db");
 
 // Call the function to ensure the table is created
 export const initDB = (callback) => {
-  let tableCount = 5; // Total number of tables to create
+  let tableCount = 3; // Total number of tables to create
   let createdTables = 0;
 
   const checkAllTablesCreated = () => {
